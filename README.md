@@ -21,7 +21,9 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 ## Installation
 
 ### Step 1: Install Userscripts Extension for Safari
-Install the [Userscripts extension](https://github.com/quoid/userscripts) for Safari.
+Install the [Userscripts extension](https://apps.apple.com/us/app/userscripts/id1463298887) (App Store link) for Safari.
+
+More info here: [https://github.com/quoid/userscripts](https://github.com/quoid/userscripts)
 
 ### Step 2: Create New Userscript
 #### Auto-install option:
