@@ -33,7 +33,7 @@ Install the [Userscripts extension](https://github.com/quoid/userscripts) for Sa
 ![Screenshot of Userscripts auto-install](https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/userscripts-install.png)
 
 #### Manual install option: 
-1. Open the script in a new tab and COPY full contents <a href="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/jobber-keyboard-shortcuts-userscript.user.js" target="_rel">Click here to open</a>
+1. Open the script in a new tab and COPY full contents <a href="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/jobber-keyboard-shortcuts-userscript.user.js" target="_blank">Click here to open</a>
 2. Click the Userscripts extension icon in Safari toolbar
 3. Click the "Open Extension Page" link.
 4. Click the **+** button, then "New JS" to create a new userscript
