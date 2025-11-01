@@ -1,5 +1,5 @@
-// Jobber Actions Consolidated
-// Version 1.5
+// Jobber Keyboard Shortcuts
+// Version 1.6
 // Author: Ben Delaney
 
 /* ************************
@@ -17,8 +17,11 @@ While viewing a JOB VISIT Modal:
  - SHIFT + N : Switch to Notes Tab
  - SHIFT + I : Switch to Info Tab
 
-   While in the 'EDIT' mode of a Job Visit Modal:
-    - CMD + CTRL + A : Assign Crew
+While in the 'EDIT' mode of a Job Visit Modal:
+ - CMD + CTRL + A : Assign Crew
+
+While on a Job page:
+ - SHIFT + V : Scroll to Visits Card
 */
 
 (function() {
@@ -486,6 +489,59 @@ While viewing a JOB VISIT Modal:
         }
     }
 
+    // Function 9: Scroll to Visits Card (SHIFT+V)
+    function scrollToVisitsCard() {
+        // Check if we're on a job page
+        const isJobPage = /\/work_orders\/\d+/.test(window.location.pathname);
+        
+        if (!isJobPage) {
+            console.log('Not on a job page, ignoring SHIFT+V');
+            return;
+        }
+
+        // Find the "Visits" card header title
+        const visitsTitle = document.querySelector('.card-headerTitle');
+        
+        // Check if it's actually the Visits title
+        if (!visitsTitle || normalizeText(visitsTitle.textContent) !== 'visits') {
+            // If first one isn't Visits, search through all card titles
+            const allTitles = document.querySelectorAll('.card-headerTitle');
+            let foundVisitsTitle = null;
+            
+            for (const title of allTitles) {
+                if (normalizeText(title.textContent) === 'visits') {
+                    foundVisitsTitle = title;
+                    break;
+                }
+            }
+            
+            if (!foundVisitsTitle) {
+                console.log('Visits card not found on this page');
+                return;
+            }
+            
+            // Get the grandparent div.card
+            const visitsCard = foundVisitsTitle.closest('div.card');
+            
+            if (visitsCard) {
+                console.log('Scrolling to Visits card');
+                visitsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                console.log('Could not find parent card element');
+            }
+        } else {
+            // Get the grandparent div.card
+            const visitsCard = visitsTitle.closest('div.card');
+            
+            if (visitsCard) {
+                console.log('Scrolling to Visits card');
+                visitsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                console.log('Could not find parent card element');
+            }
+        }
+    }
+
     // Block Escape key in Edit dialogs - using multiple event listeners for maximum coverage
     const blockEscapeInEditDialog = function(event) {
         if (event.code === 'Escape' || event.key === 'Escape' || event.keyCode === 27) {
@@ -534,7 +590,6 @@ While viewing a JOB VISIT Modal:
                 // console.log('ENTER/Option+ENTER in textarea detected');
                 // Look for the chat send button to confirm this is a chat interface
                 const chatSendButton = document.querySelector('button[aria-label="send"]');
-                console.log('Chat send button found:', !!chatSendButton);
                 if (chatSendButton) {
                     // We're in the chat interface, prevent default ENTER behavior
                     // console.log('BLOCKING ENTER/Option+ENTER in chat interface');
@@ -595,6 +650,17 @@ While viewing a JOB VISIT Modal:
             }
             // If modal is not open, let the default behavior happen (typing "I")
         }
+        // Check for SHIFT+V (Scroll to Visits Card)
+        else if (event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && event.code === 'KeyV') {
+            // Only intercept if we're on a job page
+            const isJobPage = /\/work_orders\/\d+/.test(window.location.pathname);
+            
+            if (isJobPage) {
+                event.preventDefault();
+                scrollToVisitsCard();
+            }
+            // If not on job page, let the default behavior happen (typing "V")
+        }
         // Check for CMD+ENTER (Save/Send) - Mac: CMD+Enter, Windows: CTRL+Enter
         else if (event.code === 'Enter' && 
          ((navigator.platform.includes('Mac') && event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey) ||
@@ -654,5 +720,6 @@ While viewing a JOB VISIT Modal:
     console.log('- CMD+\\: Toggle Activity Feed');
     console.log('- SHIFT+N: Switch to Notes Tab (in Visit/Request modal)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
+    console.log('- SHIFT+V: Scroll to Visits Card (on Job page)');
     console.log('- CMD+ENTER: Click Save Button');
 })();
