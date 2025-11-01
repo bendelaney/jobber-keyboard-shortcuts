@@ -180,13 +180,6 @@ While viewing a JOB VISIT Modal:
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     const anchor = tempDiv.querySelector('a');
-                    if (anchor) {
-                        console.log(`Action ${index}:`, {
-                            text: tempDiv.textContent.trim(),
-                            href: anchor.getAttribute('href'),
-                            id: anchor.id
-                        });
-                    }
                 });
                 alert('Text Reminder action not found.');
                 return;
@@ -518,15 +511,15 @@ While viewing a JOB VISIT Modal:
     document.addEventListener('keydown', function(event) {
         // Debug all ENTER key presses
         if (event.code === 'Enter') {
-            console.log('ENTER detected:', {
-                target: event.target.tagName,
-                targetId: event.target.id,
-                targetClass: event.target.className,
-                metaKey: event.metaKey,
-                ctrlKey: event.ctrlKey,
-                altKey: event.altKey,
-                shiftKey: event.shiftKey
-            });
+            // console.log('ENTER detected:', {
+            //     target: event.target.tagName,
+            //     targetId: event.target.id,
+            //     targetClass: event.target.className,
+            //     metaKey: event.metaKey,
+            //     ctrlKey: event.ctrlKey,
+            //     altKey: event.altKey,
+            //     shiftKey: event.shiftKey
+            // });
         }
         
         // Prevent ENTER-only AND Option+Enter from sending messages in chat
@@ -534,17 +527,17 @@ While viewing a JOB VISIT Modal:
             ((!event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || // Plain Enter
              (event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey))) { // Option+Enter
             
-            console.log('Plain ENTER or Option+ENTER detected');
+            // console.log('Plain ENTER or Option+ENTER detected');
             // Check if we're in a chat textarea
             const target = event.target;
             if (target && target.tagName === 'TEXTAREA') {
-                console.log('ENTER/Option+ENTER in textarea detected');
+                // console.log('ENTER/Option+ENTER in textarea detected');
                 // Look for the chat send button to confirm this is a chat interface
                 const chatSendButton = document.querySelector('button[aria-label="send"]');
                 console.log('Chat send button found:', !!chatSendButton);
                 if (chatSendButton) {
                     // We're in the chat interface, prevent default ENTER behavior
-                    console.log('BLOCKING ENTER/Option+ENTER in chat interface');
+                    // console.log('BLOCKING ENTER/Option+ENTER in chat interface');
                     event.preventDefault();
                     event.stopPropagation();
                     event.stopImmediatePropagation();
