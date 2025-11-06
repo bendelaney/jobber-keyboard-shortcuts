@@ -648,28 +648,38 @@ While on a Job page:
             }
         }
         
-        // Check for CMD+CTRL+E (Edit)
-        if (event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey && event.code === 'KeyE') {
+        // Check for CMD+CTRL+E (Mac) or CTRL+ALT+E (Windows) - Edit
+        if (((navigator.platform.includes('Mac') && event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey) ||
+             (!navigator.platform.includes('Mac') && event.ctrlKey && event.altKey && !event.metaKey && !event.shiftKey)) &&
+            event.code === 'KeyE') {
             event.preventDefault();
             openEditDialog();
         }
-        // Check for CMD+CTRL+T (Text Reminder)
-        else if (event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey && event.code === 'KeyT') {
+        // Check for CMD+CTRL+T (Mac) or CTRL+ALT+T (Windows) - Text Reminder
+        else if (((navigator.platform.includes('Mac') && event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey) ||
+                  (!navigator.platform.includes('Mac') && event.ctrlKey && event.altKey && !event.metaKey && !event.shiftKey)) &&
+                 event.code === 'KeyT') {
             event.preventDefault();
             openTextReminderDialog();
         }
-        // Check for CMD+CTRL+A (Assign Crew)
-        else if (event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey && event.code === 'KeyA') {
+        // Check for CMD+CTRL+A (Mac) or CTRL+ALT+A (Windows) - Assign Crew
+        else if (((navigator.platform.includes('Mac') && event.metaKey && event.ctrlKey && !event.altKey && !event.shiftKey) ||
+                  (!navigator.platform.includes('Mac') && event.ctrlKey && event.altKey && !event.metaKey && !event.shiftKey)) &&
+                 event.code === 'KeyA') {
             event.preventDefault();
             assignCrew();
         }
-        // Check for CMD+OPTION+\ (Message Inbox)
-        else if (event.metaKey && event.altKey && !event.ctrlKey && !event.shiftKey && event.code === 'Backslash') {
+        // Check for CMD+OPTION+/ (Mac) or CTRL+ALT+/ (Windows) - Message Inbox
+        else if (((navigator.platform.includes('Mac') && event.metaKey && event.altKey && !event.ctrlKey && !event.shiftKey) ||
+                  (!navigator.platform.includes('Mac') && event.ctrlKey && event.altKey && !event.metaKey && !event.shiftKey)) &&
+                 event.code === 'Slash') {
             event.preventDefault();
             toggleMessageInbox();
         }
-        // Check for CMD+\ (Activity Feed)
-        else if (event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey && event.code === 'Backslash') {
+        // Check for CMD+/ (Mac) or CTRL+/ (Windows) - Activity Feed
+        else if (((navigator.platform.includes('Mac') && event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey) ||
+                  (!navigator.platform.includes('Mac') && event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey)) &&
+                 event.code === 'Slash') {
             event.preventDefault();
             toggleActivityFeed();
         }
