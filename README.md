@@ -5,18 +5,18 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 ## Keyboard Shortcuts
 
 ### Global Shortcuts
-- **`CMD + \`** (Mac) or **`CTRL + \`** (Windows) - Toggle **Activity Feed** side panel
-- **`CMD + OPTION + \`** (Mac) or **`CTRL + ALT + \`** (Windows) - Toggle **Messages** side panel
+- **`CMD + /`** (Mac) or **`CTRL + /`** (Windows) - Toggle **Activity Feed** side panel
+- **`CMD + OPTION + /`** (Mac) or **`CTRL + ALT + /`** (Windows) - Toggle **Messages** side panel
 - **`CMD + ENTER`** (Mac) or **`CTRL + ENTER`** (Windows) - Click **Save** Button (works in Visit Modals, Note inputs, and email forms)
 
 ### While Viewing a Job Visit Modal
-- **`CMD + CTRL + E`** (Mac) or **`CTRL + E`** (Windows) - Open visit **Edit** dialog
-- **`CMD + CTRL + T`** (Mac) or **`CTRL + T`** (Windows) - Open **Text Reminder** dialog
+- **`CMD + CTRL + E`** (Mac) or **`CTRL + ALT + E`** (Windows) - Open visit **Edit** dialog
+- **`CMD + CTRL + T`** (Mac) or **`CTRL + ALT + T`** (Windows) - Open **Text Reminder** dialog
 - **`SHIFT + N`** - Switch to **Notes** Tab
 - **`SHIFT + I`** - Switch to **Info** Tab
 
 ### While Editing a Job Visit
-- **`CMD + CTRL + A`** (Mac) or **`CTRL + A`** (Windows) - **Assign** Crew
+- **`CMD + CTRL + A`** (Mac) or **`CTRL + ALT + A`** (Windows) - **Assign** Crew
 
 ### While on a Job Page
 - **`SHIFT + V`** - Scroll to **Visits** section
