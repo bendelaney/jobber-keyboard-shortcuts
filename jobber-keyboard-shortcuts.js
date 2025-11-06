@@ -6,19 +6,19 @@
 KEYBOARD SHORTCUTS:
 **************************
 
-Global: 
-- CMD + \ : Toggle 'Activity Feed' side panel
-- CMD + OPTION + \ : Toggle 'Messages' side panel 
-- CMD + ENTER : Click Save Button (while in any Visit Modal, Note input, or email form.)
+Global:
+- CMD + \ (Mac) or CTRL + \ (Windows) : Toggle 'Activity Feed' side panel
+- CMD + OPTION + \ (Mac) or CTRL + ALT + \ (Windows) : Toggle 'Messages' side panel
+- CMD + ENTER (Mac) or CTRL + ENTER (Windows) : Click Save Button (while in any Visit Modal, Note input, or email form.)
 
-While viewing a JOB VISIT Modal: 
- - CMD + CTRL + E : Open visit Edit dialog
- - CMD + CTRL + T : Open Text Reminder dialog
+While viewing a JOB VISIT Modal:
+ - CMD + CTRL + E (Mac) or CTRL + E (Windows) : Open visit Edit dialog
+ - CMD + CTRL + T (Mac) or CTRL + T (Windows) : Open Text Reminder dialog
  - SHIFT + N : Switch to Notes Tab
  - SHIFT + I : Switch to Info Tab
 
 While in the 'EDIT' mode of a Job Visit Modal:
- - CMD + CTRL + A : Assign Crew
+ - CMD + CTRL + A (Mac) or CTRL + A (Windows) : Assign Crew
 
 While on a Job page:
  - SHIFT + V : Scroll to Visits section
@@ -759,14 +759,18 @@ While on a Job page:
         }
     }, { capture: true });
 
+    const isMac = navigator.platform.includes('Mac');
+    const cmdKey = isMac ? 'CMD' : 'CTRL';
+    const optKey = isMac ? 'OPTION' : 'ALT';
+
     console.log('Jobber Actions Userscript loaded with keyboard shortcuts:');
-    console.log('- CMD+CTRL+E: Open Edit Dialog');
-    console.log('- CMD+CTRL+T: Open Text Reminder Dialog');
-    console.log('- CMD+CTRL+A: Assign Crew (in Visit/Request modal)');
-    console.log('- CMD+OPTION+\\: Toggle Text Message Inbox');
-    console.log('- CMD+\\: Toggle Activity Feed');
+    console.log(`- ${cmdKey}+CTRL+E: Open Edit Dialog`);
+    console.log(`- ${cmdKey}+CTRL+T: Open Text Reminder Dialog`);
+    console.log(`- ${cmdKey}+CTRL+A: Assign Crew (in Visit/Request modal)`);
+    console.log(`- ${cmdKey}+${optKey}+\\: Toggle Text Message Inbox`);
+    console.log(`- ${cmdKey}+\\: Toggle Activity Feed`);
     console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job page)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
     console.log('- SHIFT+V: Scroll to Visits Card (on Job page)');
-    console.log('- CMD+ENTER: Click Save Button');
+    console.log(`- ${cmdKey}+ENTER: Click Save Button`);
 })();
