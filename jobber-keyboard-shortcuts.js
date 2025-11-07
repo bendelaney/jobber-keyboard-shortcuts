@@ -780,9 +780,12 @@ While on a Job page:
             // Check if we're in the chat interface
             const target = event.target;
             const chatSendButton = document.querySelector('button[aria-label="send"]');
-            
+
             if (target && target.tagName === 'TEXTAREA' && chatSendButton) {
                 // We're in chat interface, send the message
+                // Stop propagation to prevent Jobber's own handler from also sending
+                event.stopPropagation();
+                event.stopImmediatePropagation();
                 console.log('CMD+ENTER in chat: sending message');
                 chatSendButton.click();
             } else {
