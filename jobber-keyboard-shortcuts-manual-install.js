@@ -685,10 +685,24 @@ While on a Job page:
         }
         // Check for SHIFT+N (Switch to Notes Tab in modal OR Scroll to Internal Notes on Job page)
         else if (event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && event.code === 'KeyN') {
+            // Don't trigger shortcut if user is typing in an input field
+            const activeElement = document.activeElement;
+            const isTypingInField = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.tagName === 'SELECT' ||
+                activeElement.isContentEditable
+            );
+
+            if (isTypingInField) {
+                // User is typing in an input field, let the normal "N" character be typed
+                return;
+            }
+
             // Check if Visit or Request modal is open first
             const title = document.querySelector('.dialog-title.js-dialogTitle');
             const titleText = normalizeText(title?.textContent || '');
-            
+
             if (title && (titleText === 'visit' || titleText === 'request')) {
                 // We're in a modal - switch to Notes tab
                 event.preventDefault();
@@ -696,7 +710,7 @@ While on a Job page:
             } else {
                 // Check if we're on a job page - scroll to Internal Notes
                 const isJobPage = /\/work_orders\/\d+/.test(window.location.pathname);
-                
+
                 if (isJobPage) {
                     event.preventDefault();
                     scrollToInternalNotesCard();
@@ -706,10 +720,24 @@ While on a Job page:
         }
         // Check for SHIFT+I (Switch to Info Tab)
         else if (event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && event.code === 'KeyI') {
+            // Don't trigger shortcut if user is typing in an input field
+            const activeElement = document.activeElement;
+            const isTypingInField = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.tagName === 'SELECT' ||
+                activeElement.isContentEditable
+            );
+
+            if (isTypingInField) {
+                // User is typing in an input field, let the normal "I" character be typed
+                return;
+            }
+
             // Only intercept if Visit or Request modal is open
             const title = document.querySelector('.dialog-title.js-dialogTitle');
             const titleText = normalizeText(title?.textContent || '');
-            
+
             if (title && (titleText === 'visit' || titleText === 'request')) {
                 event.preventDefault();
                 switchToInfoTab();
@@ -718,9 +746,23 @@ While on a Job page:
         }
         // Check for SHIFT+V (Scroll to Visits Card)
         else if (event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && event.code === 'KeyV') {
+            // Don't trigger shortcut if user is typing in an input field
+            const activeElement = document.activeElement;
+            const isTypingInField = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.tagName === 'SELECT' ||
+                activeElement.isContentEditable
+            );
+
+            if (isTypingInField) {
+                // User is typing in an input field, let the normal "V" character be typed
+                return;
+            }
+
             // Only intercept if we're on a job page
             const isJobPage = /\/work_orders\/\d+/.test(window.location.pathname);
-            
+
             if (isJobPage) {
                 event.preventDefault();
                 scrollToVisitsCard();
