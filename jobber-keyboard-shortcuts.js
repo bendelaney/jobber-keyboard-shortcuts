@@ -862,6 +862,30 @@ While on a Job page:
     document.addEventListener('keypress', blockEscapeInEditDialog, true);
 
     // Keyboard event listener with capture to intercept early
+    let suppressSlashSearch = false;
+
+    const swallowSlashEvent = (event) => {
+        if (!suppressSlashSearch) {
+            return;
+        }
+
+        const slashKey = event.code === 'Slash' || event.key === '/' || event.key === '?';
+        if (!slashKey) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        if (event.type === 'keyup') {
+            suppressSlashSearch = false;
+        }
+    };
+
+    document.addEventListener('keypress', swallowSlashEvent, true);
+    document.addEventListener('keyup', swallowSlashEvent, true);
+
     document.addEventListener('keydown', function(event) {
         if (isShortcutsModalVisible() && (event.key === 'Escape' || event.code === 'Escape')) {
             event.preventDefault();
@@ -874,10 +898,15 @@ While on a Job page:
         const wantsShortcutsModal = slashPressed && !event.altKey && ((isMac && event.metaKey) || (!isMac && event.ctrlKey));
 
         if (wantsShortcutsModal) {
+            suppressSlashSearch = true;
             event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             toggleShortcutsModal();
             return;
         }
+
+        suppressSlashSearch = false;
 
         // Debug all ENTER key presses
         if (event.code === 'Enter') {
