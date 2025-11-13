@@ -498,7 +498,18 @@ While on a Job page:
 
     // Function 3: Click Save Button (CMD+ENTER)
     function clickSaveButton() {
-        // HIGHEST PRIORITY: Check for SMS dialog send button first
+        // HIGHEST PRIORITY: Check for email dialog send button (Invoice/Quote emails)
+        const emailDialog = document.querySelector('.js-sendToClientDialog');
+        if (emailDialog && window.getComputedStyle(emailDialog.closest('.dialog-overlay, .dialog-box') || emailDialog).display !== 'none') {
+            const emailSendButton = emailDialog.querySelector('button.js-formSubmit[data-form="form.sendToClientDialog"], div.js-formSubmit[data-form="form.sendToClientDialog"]');
+            if (emailSendButton) {
+                console.log('Email dialog detected, clicking send button');
+                emailSendButton.click();
+                return;
+            }
+        }
+        
+        // SECOND PRIORITY: Check for SMS dialog send button
         const smsDialog = document.querySelector('.js-sendToClientDialogSms');
         if (smsDialog) {
             const smsSendButton = smsDialog.querySelector('button.js-formSubmit[data-form="form.sendToClientDialogSms"]');
@@ -509,7 +520,7 @@ While on a Job page:
             }
         }
         
-        // SECOND PRIORITY: Original to_do form save button
+        // THIRD PRIORITY: Original to_do form save button
         let saveButton = document.querySelector(
             'a.button.button--green.js-spinOnClick.js-formSubmit[data-form="form.to_do"], ' +
             'button.button.button--green.js-spinOnClick.js-formSubmit[data-form="form.to_do"]'
@@ -520,7 +531,7 @@ While on a Job page:
             return;
         }
         
-        // THIRD PRIORITY: Note forms, prioritize modal context over main page
+        // FOURTH PRIORITY: Note forms, prioritize modal context over main page
         console.log('Looking for note save functionality...');
         
         let activeContainer = null;
