@@ -15,10 +15,11 @@
 KEYBOARD SHORTCUTS:
 **************************
 
-Global: 
+Global:
 - CMD + \ : Toggle 'Activity Feed' side panel
-- CMD + OPTION + \ : Toggle 'Messages' side panel 
+- CMD + OPTION + \ : Toggle 'Messages' side panel
 - CMD + ENTER : Click Save Button (while in any Visit Modal, Note input, or email form.)
+- CMD + ? : Show keyboard shortcuts reference
 
 While viewing a JOB VISIT Modal: 
  - CMD + CTRL + E : Open visit Edit dialog
@@ -39,6 +40,262 @@ While on a Job page:
 
     // Utility function to normalize text
     const normalizeText = (s) => (s || '').trim().toLowerCase();
+
+    const shortcutSections = [
+        {
+            title: 'Global',
+            shortcuts: [
+                { combo: 'CMD + \\ / CTRL + \\', description: "Toggle 'Activity Feed' side panel" },
+                { combo: 'CMD + OPTION + \\ / CTRL + ALT + \\', description: "Toggle 'Messages' side panel" },
+                { combo: 'CMD + ENTER / CTRL + ENTER', description: 'Click Save button in visit modals, notes, or email forms' },
+                { combo: 'CMD + ? / CTRL + ?', description: 'Show this shortcuts reference' }
+            ]
+        },
+        {
+            title: 'Visit / Request Modals',
+            shortcuts: [
+                { combo: 'CMD + CTRL + E / CTRL + E', description: 'Open visit Edit dialog' },
+                { combo: 'CMD + CTRL + T / CTRL + T', description: 'Open Text Reminder dialog' },
+                { combo: 'SHIFT + N', description: 'Switch to Notes tab' },
+                { combo: 'SHIFT + I', description: 'Switch to Info tab' }
+            ]
+        },
+        {
+            title: 'Visit Edit Mode',
+            shortcuts: [
+                { combo: 'CMD + CTRL + A / CTRL + A', description: 'Assign crew' }
+            ]
+        },
+        {
+            title: 'Job Page',
+            shortcuts: [
+                { combo: 'SHIFT + V', description: 'Scroll to Visits section' },
+                { combo: 'SHIFT + N', description: 'Scroll to Internal Notes section' }
+            ]
+        }
+    ];
+
+    let shortcutsModal;
+    let shortcutsOverlay;
+    let previousBodyOverflow;
+
+    const createShortcutsModal = () => {
+        if (shortcutsOverlay) {
+            return;
+        }
+
+        shortcutsOverlay = document.createElement('div');
+        shortcutsOverlay.id = 'jobber-shortcuts-overlay';
+        shortcutsOverlay.setAttribute('role', 'presentation');
+        shortcutsOverlay.style.cssText = [
+            'position: fixed',
+            'top: 0',
+            'left: 0',
+            'width: 100%',
+            'height: 100%',
+            'display: none',
+            'align-items: center',
+            'justify-content: center',
+            'background: rgba(17, 24, 39, 0.65)',
+            'z-index: 2147483000',
+            'padding: 24px',
+            'box-sizing: border-box'
+        ].join(';');
+
+        shortcutsModal = document.createElement('div');
+        shortcutsModal.id = 'jobber-shortcuts-modal';
+        shortcutsModal.setAttribute('role', 'dialog');
+        shortcutsModal.setAttribute('aria-modal', 'true');
+        shortcutsModal.setAttribute('aria-labelledby', 'jobber-shortcuts-title');
+        shortcutsModal.setAttribute('tabindex', '-1');
+        shortcutsModal.style.cssText = [
+            'background: #ffffff',
+            'color: #1f2933',
+            'max-width: 640px',
+            'width: 100%',
+            'max-height: 80vh',
+            'overflow-y: auto',
+            'border-radius: 12px',
+            'box-shadow: 0 25px 80px rgba(15, 23, 42, 0.35)',
+            'padding: 28px 32px',
+            'box-sizing: border-box',
+            'font-family: "Helvetica Neue", Arial, sans-serif',
+            'position: relative'
+        ].join(';');
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.setAttribute('aria-label', 'Close shortcuts reference');
+        closeButton.textContent = '×';
+        closeButton.style.cssText = [
+            'position: absolute',
+            'top: 12px',
+            'right: 16px',
+            'border: none',
+            'background: none',
+            'font-size: 26px',
+            'cursor: pointer',
+            'line-height: 1',
+            'color: #6b7280'
+        ].join(';');
+
+        closeButton.addEventListener('mouseenter', () => {
+            closeButton.style.color = '#111827';
+        });
+        closeButton.addEventListener('mouseleave', () => {
+            closeButton.style.color = '#6b7280';
+        });
+        closeButton.addEventListener('click', () => {
+            hideShortcutsModal();
+        });
+
+        const title = document.createElement('h2');
+        title.id = 'jobber-shortcuts-title';
+        title.textContent = 'Keyboard Shortcuts';
+        title.style.cssText = [
+            'margin: 0 0 12px',
+            'font-size: 24px',
+            'font-weight: 600'
+        ].join(';');
+
+        const subtitle = document.createElement('p');
+        subtitle.textContent = 'Press CMD + ? or CTRL + ? again to close';
+        subtitle.style.cssText = [
+            'margin: 0 0 20px',
+            'color: #4b5563',
+            'font-size: 15px'
+        ].join(';');
+
+        const listContainer = document.createElement('div');
+        listContainer.style.cssText = [
+            'display: grid',
+            'gap: 18px'
+        ].join(';');
+
+        shortcutSections.forEach((section) => {
+            const sectionWrapper = document.createElement('section');
+            sectionWrapper.style.cssText = [
+                'border-top: 1px solid #e5e7eb',
+                'padding-top: 16px'
+            ].join(';');
+
+            if (listContainer.childElementCount === 0) {
+                sectionWrapper.style.borderTop = 'none';
+                sectionWrapper.style.paddingTop = '0';
+            }
+
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.textContent = section.title;
+            sectionTitle.style.cssText = [
+                'margin: 0 0 10px',
+                'font-size: 16px',
+                'font-weight: 600',
+                'text-transform: uppercase',
+                'letter-spacing: 0.04em',
+                'color: #111827'
+            ].join(';');
+
+            const list = document.createElement('ul');
+            list.style.cssText = [
+                'list-style: none',
+                'margin: 0',
+                'padding: 0',
+                'display: grid',
+                'gap: 8px'
+            ].join(';');
+
+            section.shortcuts.forEach((shortcut) => {
+                const item = document.createElement('li');
+                item.style.cssText = [
+                    'display: flex',
+                    'justify-content: space-between',
+                    'align-items: center',
+                    'background: #f9fafb',
+                    'border: 1px solid #e5e7eb',
+                    'border-radius: 8px',
+                    'padding: 10px 14px',
+                    'gap: 16px'
+                ].join(';');
+
+                const combo = document.createElement('span');
+                combo.textContent = shortcut.combo;
+                combo.style.cssText = [
+                    'font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    'font-size: 13px',
+                    'color: #111827'
+                ].join(';');
+
+                const description = document.createElement('span');
+                description.textContent = shortcut.description;
+                description.style.cssText = [
+                    'font-size: 14px',
+                    'color: #374151',
+                    'text-align: right'
+                ].join(';');
+
+                item.appendChild(combo);
+                item.appendChild(description);
+                list.appendChild(item);
+            });
+
+            sectionWrapper.appendChild(sectionTitle);
+            sectionWrapper.appendChild(list);
+            listContainer.appendChild(sectionWrapper);
+        });
+
+        shortcutsModal.appendChild(closeButton);
+        shortcutsModal.appendChild(title);
+        shortcutsModal.appendChild(subtitle);
+        shortcutsModal.appendChild(listContainer);
+
+        shortcutsOverlay.appendChild(shortcutsModal);
+
+        shortcutsOverlay.addEventListener('click', () => {
+            hideShortcutsModal();
+        });
+
+        shortcutsModal.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        document.body.appendChild(shortcutsOverlay);
+    };
+
+    const hideShortcutsModal = () => {
+        if (!shortcutsOverlay) {
+            return;
+        }
+        shortcutsOverlay.style.display = 'none';
+        if (previousBodyOverflow !== undefined) {
+            document.body.style.overflow = previousBodyOverflow;
+            previousBodyOverflow = undefined;
+        }
+    };
+
+    const showShortcutsModal = () => {
+        createShortcutsModal();
+        if (!shortcutsOverlay) {
+            return;
+        }
+        previousBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        shortcutsOverlay.style.display = 'flex';
+        shortcutsModal.focus({ preventScroll: true });
+    };
+
+    const toggleShortcutsModal = () => {
+        createShortcutsModal();
+        if (!shortcutsOverlay) {
+            return;
+        }
+        if (shortcutsOverlay.style.display === 'flex') {
+            hideShortcutsModal();
+        } else {
+            showShortcutsModal();
+        }
+    };
+
+    const isShortcutsModalVisible = () => shortcutsOverlay && shortcutsOverlay.style.display === 'flex';
 
     // Function 1: Open Edit Dialog (CMD+CTRL+E)
     function openEditDialog() {
@@ -591,10 +848,13 @@ While on a Job page:
 
     // Block Escape key in Edit dialogs - using multiple event listeners for maximum coverage
     const blockEscapeInEditDialog = function(event) {
+        if (isShortcutsModalVisible && isShortcutsModalVisible()) {
+            return;
+        }
         if (event.code === 'Escape' || event.key === 'Escape' || event.keyCode === 27) {
             // Check if we're in an Edit dialog by looking for the edit form
             const editForm = document.querySelector('form.to_do[id^="edit_to_do_"]');
-            
+
             if (editForm) {
                 console.log('Escape key blocked in Edit Dialog (event type: ' + event.type + ')');
                 event.preventDefault();
@@ -612,6 +872,22 @@ While on a Job page:
 
     // Keyboard event listener with capture to intercept early
     document.addEventListener('keydown', function(event) {
+        if (isShortcutsModalVisible() && (event.key === 'Escape' || event.code === 'Escape')) {
+            event.preventDefault();
+            hideShortcutsModal();
+            return;
+        }
+
+        const isMac = navigator.platform.includes('Mac');
+        const slashPressed = event.code === 'Slash';
+        const wantsShortcutsModal = slashPressed && !event.altKey && ((isMac && event.metaKey) || (!isMac && event.ctrlKey));
+
+        if (wantsShortcutsModal) {
+            event.preventDefault();
+            toggleShortcutsModal();
+            return;
+        }
+
         // Debug all ENTER key presses
         if (event.code === 'Enter') {
             // console.log('ENTER detected:', {
