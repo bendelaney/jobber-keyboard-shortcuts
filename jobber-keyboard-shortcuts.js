@@ -1143,7 +1143,7 @@ While on Job, Invoice, or Quote pages:
     console.log('- CMD+?: Show shortcuts help modal');
     console.log('- CMD+OPTION+\\: Toggle Text Message Inbox');
     console.log('- CMD+\\: Toggle Activity Feed');
-    console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job page)');
+    console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job, Invoice, Quote pages)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
     console.log('- SHIFT+V: Scroll to Visits Card (on Job page)');
     console.log('- CMD+ENTER: Click Save Button');
