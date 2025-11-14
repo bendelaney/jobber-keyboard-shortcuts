@@ -23,6 +23,8 @@ While in the 'EDIT' mode of a Job Visit Modal:
 
 While on a Job page:
  - SHIFT + V : Scroll to Visits section
+
+While on Job, Invoice, or Quote pages:
  - SHIFT + N : Scroll to Internal Notes section
 */
 

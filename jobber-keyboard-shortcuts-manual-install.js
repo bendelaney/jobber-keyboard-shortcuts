@@ -8,7 +8,7 @@
 // ==/UserScript==
 
 // Jobber Actions Consolidated
-// Version 1.7
+// Version 1.8
 // Author: Ben Delaney
 
 /* ************************
@@ -19,7 +19,7 @@ Global:
 - CMD + \ : Toggle 'Activity Feed' side panel
 - CMD + OPTION + \ : Toggle 'Messages' side panel
 - CMD + ENTER : Click Save Button (while in any Visit Modal, Note input, or email form.)
-- CMD + CTRL + ? : Show keyboard shortcuts reference
+- CMD + ? : Show keyboard shortcuts reference
 
 While viewing a JOB VISIT Modal: 
  - CMD + CTRL + E : Open visit Edit dialog
@@ -32,6 +32,8 @@ While in the 'EDIT' mode of a Job Visit Modal:
 
 While on a Job page:
  - SHIFT + V : Scroll to Visits section
+
+While on Job, Invoice, or Quote pages:
  - SHIFT + N : Scroll to Internal Notes section
 */
 
