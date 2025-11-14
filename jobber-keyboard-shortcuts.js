@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 1.7
+// Version 1.8
 // Author: Ben Delaney
 
 /* ************************
