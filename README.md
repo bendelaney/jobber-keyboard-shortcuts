@@ -27,8 +27,8 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 
 #### For Mac Users (Safari):
 Install a userscripts extension in your browser. 
-[Userscripts (free)](https://apps.apple.com/us/app/userscripts/id1463298887) (App Store link).
-[Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id6738342400) (App Store link) ([Direct](https://www.tampermonkey.net)). 
+[Userscripts (free)](https://apps.apple.com/us/app/userscripts/id1463298887) (App Store link).<br/>
+[Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id6738342400) (App Store link) ([Direct:](https://www.tampermonkey.net)). 
 
 #### For Windows Users (Chrome/Firefox/Edge):
 Install [Tampermonkey](https://www.tampermonkey.net/) browser extension:
