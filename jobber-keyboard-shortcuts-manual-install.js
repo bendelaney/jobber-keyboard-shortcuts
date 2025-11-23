@@ -140,24 +140,19 @@ While on Job, Invoice, or Quote pages:
         {
             title: 'Global',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity</strong> Feed' side panel" },
+                { combo: isMac ? 'COMMAND + K' : 'CTRL + K', description: 'Show this shortcuts reference' },
+                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity Feed</strong>' side panel" },
                 { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle '<strong>Messages</strong>' side panel" },
-                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click Save button in visit modals, notes, or email forms' },
-                { combo: isMac ? 'COMMAND + K' : 'CTRL + K', description: 'Show this shortcuts reference' }
+                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save</strong> button in visit modals, notes, or email forms' },
             ]
         },
         {
             title: 'Visit / Request Modals',
             shortcuts: [
                 { combo: isMac ? 'COMMAND + CTRL + E' : 'CTRL + ALT + E', description: 'Open <strong>Edit</strong> dialog or click Edit in popover' },
-                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: 'Open Text <strong>Reminder</strong> dialog' },
+                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: 'Open <strong>Text</strong> Reminder dialog' },
                 { combo: 'SHIFT + N', description: 'Switch to <strong>Notes</strong> tab' },
-                { combo: 'SHIFT + I', description: 'Switch to <strong>Info</strong> tab' }
-            ]
-        },
-        {
-            title: 'While in a Visit \'Edit\' Mode',
-            shortcuts: [
+                { combo: 'SHIFT + I', description: 'Switch to <strong>Info</strong> tab' },
                 { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: '<strong>Assign</strong> crew' }
             ]
         },
@@ -486,6 +481,37 @@ While on Job, Invoice, or Quote pages:
         });
     }
 
+    // Function 1b: Click Edit button in Popover Modal (scheduler view)
+    function clickEditInPopover() {
+        // Look for an open popover with data-mode="view"
+        const popover = document.querySelector('div[data-testid="popover"][data-open="true"][data-mode="view"]');
+
+        if (!popover) {
+            return false; // No popover found
+        }
+
+        // Find the Edit button inside the popover
+        // Structure: ._buttonContainer_1dxlc_1 > ._button_1dxlc_1 > button > span (text: "Edit")
+        const buttonContainer = popover.querySelector('._buttonContainer_1dxlc_1');
+
+        if (!buttonContainer) {
+            return false;
+        }
+
+        // Find all buttons in the container and look for one with "Edit" text
+        const buttons = buttonContainer.querySelectorAll('button');
+        for (const button of buttons) {
+            const span = button.querySelector('span');
+            if (span && normalizeText(span.textContent) === 'edit') {
+                console.log('Edit button found in popover, clicking...');
+                button.click();
+                return true; // Successfully clicked
+            }
+        }
+
+        return false; // Edit button not found in popover
+    }
+
     // Function 2: Open Text Reminder Dialog (CMD+CTRL+T)
     function openTextReminderDialog() {
         openActionDialog('Text Reminder', (text, href, id) => {
@@ -696,16 +722,48 @@ While on Job, Invoice, or Quote pages:
 
     // Function 7: Assign Crew (CMD+CTRL+A)
     function assignCrew() {
+        // Look for an open popover with data-mode="view"
+        const popover = document.querySelector('div[data-testid="popover"][data-open="true"][data-mode="view"]');
+        if (popover) {
+            // Find the H5 containing "Team"
+            const teamHeadings = popover.querySelectorAll('h5');
+            let teamButton = null;
+
+            for (const heading of teamHeadings) {
+                if (normalizeText(heading.textContent) === 'team') {
+                    // Find the next button after this heading (traverse siblings)
+                    let nextElement = heading.nextElementSibling;
+                    while (nextElement) {
+                        const button = nextElement.querySelector('button[role="combobox"]');
+                        if (button) {
+                            teamButton = button;
+                            break;
+                        }
+                        nextElement = nextElement.nextElementSibling;
+                    }
+                    break;
+                }
+            }
+
+            if (teamButton) {
+                console.log('Assign Crew button found in popover, clicking...');
+                teamButton.click();
+                return;
+            } else {
+                console.log('Assign Crew button not found in popover');
+                // Continue to try the regular modal approach below
+            }
+        }
         // Check if we're in a Visit/Request modal OR in an Edit Visit/Request form
         const title = document.querySelector('.dialog-title.js-dialogTitle');
         const titleText = normalizeText(title?.textContent || '');
-        
+
         // Also check if we're in an edit form
         const editForm = document.querySelector('form.to_do[id^="edit_to_do_"]');
-        
+
         const isInVisitModal = title && (titleText === 'visit' || titleText === 'request' || titleText === 'edit visit' || titleText === 'edit request');
         const isInEditForm = editForm !== null;
-        
+
         if (!isInVisitModal && !isInEditForm) {
             console.log('Not in Visit/Request modal or Edit form, ignoring CMD+CTRL+A');
             return;
@@ -893,7 +951,14 @@ While on Job, Invoice, or Quote pages:
         // Check for CMD+CTRL+E (Mac) or CTRL+ALT+E (Windows) - Edit
         if (isModifierCombo(event, 'cmd+ctrl') && event.code === 'KeyE') {
             event.preventDefault();
-            openEditDialog();
+
+            // First try clicking Edit button in popover (scheduler view)
+            const popoverHandled = clickEditInPopover();
+
+            // If no popover was found/handled, try the regular edit dialog
+            if (!popoverHandled) {
+                openEditDialog();
+            }
         }
         // Check for CMD+CTRL+T (Mac) or CTRL+ALT+T (Windows) - Text Reminder
         else if (isModifierCombo(event, 'cmd+ctrl') && event.code === 'KeyT') {

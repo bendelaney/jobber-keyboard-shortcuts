@@ -1,4 +1,4 @@
-# Jobber Keyboard Shortcuts - Copilot Instructions
+# Jobber Keyboard Shortcuts - Project Instructions
 
 ## Project Overview
 This is a userscript that adds keyboard shortcuts to Jobber (secure.getjobber.com). The project maintains two versions of the same code:
@@ -11,7 +11,8 @@ This is a userscript that adds keyboard shortcuts to Jobber (secure.getjobber.co
 **ALWAYS maintain identical functionality between both script files.**
 - When updating any function or feature, apply the change to BOTH files
 - The only difference should be the userscript metadata headers
-- Use `multi_replace_string_in_file` to update both files simultaneously when possible
+- **EVERY code change MUST be applied to BOTH files in the same response**
+- Never make a change to just one file
 
 ### File-Specific Differences
 - `jobber-keyboard-shortcuts-manual-install.js` includes userscript metadata (lines 1-7):
