@@ -156,7 +156,7 @@ While on Job, Invoice, or Quote pages:
             ]
         },
         {
-            title: 'Visit Edit Mode',
+            title: 'While in a Visit \'Edit\' Mode',
             shortcuts: [
                 { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: 'Assign crew' }
             ]
@@ -285,7 +285,7 @@ While on Job, Invoice, or Quote pages:
                 'margin: 0 0 10px',
                 'font-size: 16px',
                 'font-weight: 600',
-                'text-transform: uppercase',
+                'text-transform: titlecase',
                 'letter-spacing: 0.04em',
                 'color: #111827'
             ].join(';');
