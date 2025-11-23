@@ -131,8 +131,8 @@ While on Job, Invoice, or Quote pages:
         {
             title: 'Global',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle 'Activity Feed' side panel" },
-                { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle 'Messages' side panel" },
+                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity</strong> Feed' side panel" },
+                { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle '<strong>Messages</strong>' side panel" },
                 { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click Save button in visit modals, notes, or email forms' },
                 { combo: isMac ? 'COMMAND + K' : 'CTRL + K', description: 'Show this shortcuts reference' }
             ]
@@ -140,23 +140,23 @@ While on Job, Invoice, or Quote pages:
         {
             title: 'Visit / Request Modals',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + CTRL + E' : 'CTRL + ALT + E', description: 'Open Edit dialog or click Edit in popover' },
-                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: 'Open Text Reminder dialog' },
-                { combo: 'SHIFT + N', description: 'Switch to Notes tab' },
-                { combo: 'SHIFT + I', description: 'Switch to Info tab' }
+                { combo: isMac ? 'COMMAND + CTRL + E' : 'CTRL + ALT + E', description: 'Open <strong>Edit</strong> dialog or click Edit in popover' },
+                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: 'Open Text <strong>Reminder</strong> dialog' },
+                { combo: 'SHIFT + N', description: 'Switch to <strong>Notes</strong> tab' },
+                { combo: 'SHIFT + I', description: 'Switch to <strong>Info</strong> tab' }
             ]
         },
         {
             title: 'While in a Visit \'Edit\' Mode',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: 'Assign crew' }
+                { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: '<strong>Assign</strong> crew' }
             ]
         },
         {
             title: 'Job / Invoice / Quote Pages',
             shortcuts: [
-                { combo: 'SHIFT + V', description: 'Scroll to Visits section (Job pages only)' },
-                { combo: 'SHIFT + N', description: 'Scroll to Internal Notes section' }
+                { combo: 'SHIFT + V', description: 'Scroll to <strong>Visits</strong> section (Job pages only)' },
+                { combo: 'SHIFT + N', description: 'Scroll to Internal <strong>Notes</strong> section' }
             ]
         }
     ];
@@ -274,10 +274,9 @@ While on Job, Invoice, or Quote pages:
             sectionTitle.textContent = section.title;
             sectionTitle.style.cssText = [
                 'margin: 0 0 10px',
-                'font-size: 16px',
-                'font-weight: 600',
+                'font-size: 18px',
+                'font-weight: 700',
                 'text-transform: titlecase',
-                'letter-spacing: 0.04em',
                 'color: #111827'
             ].join(';');
 
@@ -304,7 +303,7 @@ While on Job, Invoice, or Quote pages:
                 ].join(';');
 
                 const combo = document.createElement('span');
-                combo.textContent = shortcut.combo;
+                combo.innerHTML = shortcut.combo;
                 combo.style.cssText = [
                     'font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                     'font-size: 13px',
@@ -312,7 +311,7 @@ While on Job, Invoice, or Quote pages:
                 ].join(';');
 
                 const description = document.createElement('span');
-                description.textContent = shortcut.description;
+                description.innerHTML = shortcut.description;
                 description.style.cssText = [
                     'font-size: 14px',
                     'color: #374151',
