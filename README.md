@@ -23,7 +23,7 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 
 ## Installation
 
-### Step 1: Install Userscript Extension
+### 1️⃣ Step 1: Install Userscript Extension
 
 #### For Mac Users:
 Install a userscripts extension in your browser.<br/>
@@ -36,14 +36,14 @@ Install [Tampermonkey](https://www.tampermonkey.net/) browser extension:
 - **Firefox**: [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 - **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd)
 
-### Step 2: Create New Userscript
+### 2️⃣ Step 2: Create New Userscript
 
 #### Auto-install option (recommended):
 1. Make sure your extension from Step 1 is turned ON.
 2. Visit this: [install link](https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/jobber-keyboard-shortcuts-userscript.user.js)
 3. _While on that page_:
    - **For Safari/Userscripts**: Click the Userscripts icon in browser (looks like **"</>"**), then click **"Click to install"**
-   - **For Tampermonkey**: Tampermonkey should automatically detect the userscript and show an installation page. Click **Install** button.
+   - **For Tampermonkey**: Tampermonkey should automatically detect the userscript and show an 'installation page'. Click **Install** button.
 
 ![Screenshot of Userscripts auto-install](https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/userscripts-install.png)
 
