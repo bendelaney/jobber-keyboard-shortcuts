@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 1.8
+// Version 1.9
 // Author: Ben Delaney
 
 /* ************************
@@ -10,7 +10,7 @@ Global:
 - CMD + \ : Toggle 'Activity Feed' side panel
 - CMD + OPTION + \ : Toggle 'Messages' side panel
 - CMD + ENTER : Click Save Button (while in any Visit Modal, Note input, or email form.)
-- CMD + / : Show keyboard shortcuts reference
+- CMD + K : Show keyboard shortcuts reference
 
 While viewing a JOB VISIT Modal:
  - CMD + CTRL + E : Open visit Edit dialog
@@ -134,7 +134,7 @@ While on Job, Invoice, or Quote pages:
                 { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle 'Activity Feed' side panel" },
                 { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle 'Messages' side panel" },
                 { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click Save button in visit modals, notes, or email forms' },
-                { combo: isMac ? 'COMMAND + /' : 'CTRL + /', description: 'Show this shortcuts reference' }
+                { combo: isMac ? 'COMMAND + K' : 'CTRL + K', description: 'Show this shortcuts reference' }
             ]
         },
         {
@@ -804,11 +804,11 @@ While on Job, Invoice, or Quote pages:
             shiftKey: event.shiftKey
         });
 
-        const slashPressed = event.code === 'Slash' || event.key === '/' || event.key === '?';
+        const kPressed = event.code === 'KeyK' || event.key === 'k' || event.key === 'K';
 
-        // On Mac: CMD+/
-        // On Windows: CTRL+/
-        const wantsShortcutsModal = slashPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey));
+        // On Mac: CMD+K
+        // On Windows: CTRL+K
+        const wantsShortcutsModal = kPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey));
 
         if (wantsShortcutsModal) {
             console.log('✅ Shortcuts modal triggered!', event.type);
@@ -837,10 +837,10 @@ While on Job, Invoice, or Quote pages:
             return;
         }
 
-        const slashPressed = event.code === 'Slash' || event.key === '/' || event.key === '?';
-        // On Mac: CMD+/
-        // On Windows: CTRL+/
-        const wantsShortcutsModal = slashPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey));
+        const kPressed = event.code === 'KeyK' || event.key === 'k' || event.key === 'K';
+        // On Mac: CMD+K
+        // On Windows: CTRL+K
+        const wantsShortcutsModal = kPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey));
 
         if (wantsShortcutsModal) {
             // Already handled above
@@ -1021,7 +1021,7 @@ While on Job, Invoice, or Quote pages:
     console.log(`- ${isMac ? 'CMD+CTRL+E' : 'CTRL+ALT+E'}: Open Edit Dialog`);
     console.log(`- ${isMac ? 'CMD+CTRL+T' : 'CTRL+ALT+T'}: Open Text Reminder Dialog`);
     console.log(`- ${isMac ? 'CMD+CTRL+A' : 'CTRL+ALT+A'}: Assign Crew (in Visit/Request modal)`);
-    console.log(`- ${isMac ? 'CMD+/' : 'CTRL+/'}: Show shortcuts help modal`);
+    console.log(`- ${isMac ? 'CMD+K' : 'CTRL+K'}: Show shortcuts help modal`);
     console.log(`- ${isMac ? 'CMD+OPTION+\\' : 'CTRL+ALT+\\'}: Toggle Text Message Inbox`);
     console.log(`- ${isMac ? 'CMD+\\' : 'CTRL+\\'}: Toggle Activity Feed`);
     console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job, Invoice, Quote pages)');
