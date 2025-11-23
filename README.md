@@ -5,24 +5,20 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 ## Keyboard Shortcuts
 
 ### Global Shortcuts
+- **`CMD + K`** (Mac) or **`CTRL + K`** (Windows) - Show **keyboard shortcuts reference** modal
 - **`CMD + \`** (Mac) or **`CTRL + \`** (Windows) - Toggle **Activity Feed** side panel
 - **`CMD + OPTION + \`** (Mac) or **`CTRL + ALT + \`** (Windows) - Toggle **Messages** side panel
 - **`CMD + ENTER`** (Mac) or **`CTRL + ENTER`** (Windows) - Click **Save** Button (works in Visit Modals, Note inputs, and email forms)
-- **`CMD + K`** (Mac) or **`CTRL + K`** (Windows) - Show **keyboard shortcuts reference** modal
 
-### While Viewing a Job Visit Modal
+### While Viewing a Visit Modal
 - **`CMD + CTRL + E`** (Mac) or **`CTRL + ALT + E`** (Windows) - Open visit **Edit** dialog
 - **`CMD + CTRL + T`** (Mac) or **`CTRL + ALT + T`** (Windows) - Open **Text Reminder** dialog
+- **`CMD + CTRL + A`** (Mac) or **`CTRL + ALT + A`** (Windows) - **Assign** Crew
 - **`SHIFT + N`** - Switch to **Notes** Tab
 - **`SHIFT + I`** - Switch to **Info** Tab
 
-### While Editing a Job Visit
-- **`CMD + CTRL + A`** (Mac) or **`CTRL + ALT + A`** (Windows) - **Assign** Crew
-
-### While on a Job Page
-- **`SHIFT + V`** - Scroll to **Visits** section
-
 ### While on Job / Invoice / Quote Pages
+- **`SHIFT + V`** - Scroll to **Visits** section (job page only)
 - **`SHIFT + N`** - Scroll to **Internal Notes** section
 
 ## Installation
@@ -30,9 +26,9 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 ### Step 1: Install Userscript Extension
 
 #### For Mac Users (Safari):
-Install the [Userscripts extension](https://apps.apple.com/us/app/userscripts/id1463298887) (App Store link) for Safari.
-
-More info here: [https://github.com/quoid/userscripts](https://github.com/quoid/userscripts)
+Install a userscripts extension in your browser. 
+[Userscripts (free)](https://apps.apple.com/us/app/userscripts/id1463298887) (App Store link).
+[Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id6738342400) (App Store link) ([Direct](https://www.tampermonkey.net)). 
 
 #### For Windows Users (Chrome/Firefox/Edge):
 Install [Tampermonkey](https://www.tampermonkey.net/) browser extension:
