@@ -47,8 +47,7 @@ Install [Tampermonkey](https://www.tampermonkey.net/) browser extension:
 3. Toggle ON two settings: "Developer Mode" (in the upper right) and "Allow User Scripts"
 ![Screenshot of Settings to turn on](https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/settings-to-turn-on.png)
 4. Return to Jobber. 
-[https://secure.getjobber.com](https://secure.getjobber.com). If it's working, you'll see a red number on the Tampermonkey icon. 
-<img src="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/toolbar-icon.png" alt="Screenshot of Tampermonkey context menu" style="max-width: 200px; width: 97px;"/>
+[https://secure.getjobber.com](https://secure.getjobber.com). If it's working, you'll see a red number on the Tampermonkey icon. <img src="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/toolbar-icon.png" alt="Screenshot of Tampermonkey context menu" style="max-width: 200px; width: 97px;"/>
 
 
 ### 2️⃣ Step 2: Install the Userscript
