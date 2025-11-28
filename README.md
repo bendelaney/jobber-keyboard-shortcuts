@@ -42,7 +42,7 @@ Install [Tampermonkey](https://www.tampermonkey.net/) browser extension:
 ### 1️⃣🅱️ ⚠️ IMPORTANT STEP For WINDOWS users:
 1. Right-click the Tampermonkey icon in your browser toolbar
 2. Choose "Manage Extension"
-<p style="text-align:left; padding-left: 40px;"><img src="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/manage-extension.png" alt="Screenshot of Tampermonkey context menu" style="max-width: 400px; width: 50%;"></p>
+<span style="text-align:left; padding-left: 40px;"><img src="https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/manage-extension.png" alt="Screenshot of Tampermonkey context menu" style="max-width: 400px; width: 50%;"></span>
 
 3. Toggle ON two settings: "Developer Mode" (in the upper right) and "Allow User Scripts"
 ![Screenshot of Settings to turn on](https://raw.githubusercontent.com/bendelaney/jobber-userscripts/refs/heads/main/settings-to-turn-on.png)
