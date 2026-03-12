@@ -1,5 +1,9 @@
 // Jobber Actions Consolidated
+<<<<<<< HEAD
 // Version 2.0
+=======
+// Version 1.9.1
+>>>>>>> cbd660f2e9c297f32e93064d408fe74686732f9c
 // Author: Ben Delaney
 
 /* ************************
@@ -49,6 +53,26 @@ While on Job, Invoice, or Quote pages:
             activeElement.tagName === 'SELECT' ||
             activeElement.isContentEditable
         );
+    };
+
+    // Check if we're in the Messages interface - robust detection
+    const isInMessagesInterface = () => {
+        // Check for various possible selectors for the send button
+        const sendButton =
+            document.querySelector('button[aria-label="send"]') ||
+            document.querySelector('button[aria-label="Send"]') ||
+            document.querySelector('button[aria-label="Send message"]') ||
+            document.querySelector('button[aria-label="Send Message"]') ||
+            // Check for send button by icon or class patterns
+            document.querySelector('button[type="submit"][aria-label*="end" i]') ||
+            // Check for Messages panel visibility
+            (document.querySelector('[data-testid="message-center"]') &&
+             document.querySelector('[data-testid="message-center"] button[type="submit"]')) ||
+            // Check for text message inbox panel
+            (document.querySelector('[aria-label*="Message" i]') &&
+             document.querySelector('form button[type="submit"]'));
+
+        return sendButton !== null;
     };
 
     // Get visit/request dialog information
@@ -942,25 +966,19 @@ While on Job, Invoice, or Quote pages:
         }
         
         // Prevent ENTER-only AND Option+Enter from sending messages in chat
-        if (event.code === 'Enter' && 
+        if (event.code === 'Enter' &&
             ((!event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || // Plain Enter
              (event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey))) { // Option+Enter
-            
-            // console.log('Plain ENTER or Option+ENTER detected');
-            // Check if we're in a chat textarea
+
+            // Check if we're in a Messages textarea
             const target = event.target;
-            if (target && target.tagName === 'TEXTAREA') {
-                // console.log('ENTER/Option+ENTER in textarea detected');
-                // Look for the chat send button to confirm this is a chat interface
-                const chatSendButton = document.querySelector('button[aria-label="send"]');
-                if (chatSendButton) {
-                    // We're in the chat interface, prevent default ENTER behavior
-                    // console.log('BLOCKING ENTER/Option+ENTER in chat interface');
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
-                    return false;
-                }
+            if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
+                // We're in the Messages interface, prevent default ENTER behavior
+                console.log('BLOCKING ENTER/Option+ENTER in Messages interface');
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                return false;
             }
         }
         
@@ -1065,19 +1083,31 @@ While on Job, Invoice, or Quote pages:
                 }
             }
             
-            // Check if we're in the chat interface
+            // Check if we're in the Messages interface
             const target = event.target;
-            const chatSendButton = document.querySelector('button[aria-label="send"]');
 
-            if (target && target.tagName === 'TEXTAREA' && chatSendButton) {
-                // We're in chat interface, send the message
-                // Stop propagation to prevent Jobber's own handler from also sending
-                event.stopPropagation();
-                event.stopImmediatePropagation();
-                console.log('CMD+ENTER in chat: sending message');
-                chatSendButton.click();
+            if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
+                // We're in Messages interface, send the message
+                // Find the send button using multiple strategies
+                const sendButton =
+                    document.querySelector('button[aria-label="send"]') ||
+                    document.querySelector('button[aria-label="Send"]') ||
+                    document.querySelector('button[aria-label="Send message"]') ||
+                    document.querySelector('button[aria-label="Send Message"]') ||
+                    document.querySelector('button[type="submit"][aria-label*="end" i]');
+
+                if (sendButton) {
+                    // Stop propagation to prevent Jobber's own handler from also sending
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    console.log('CMD+ENTER in Messages: sending message');
+                    sendButton.click();
+                } else {
+                    console.log('Messages interface detected but send button not found');
+                    clickSaveButton();
+                }
             } else {
-                // Not in chat, use regular save functionality
+                // Not in Messages, use regular save functionality
                 console.log('CMD+ENTER: using save functionality');
                 clickSaveButton();
             }
@@ -1089,15 +1119,12 @@ While on Job, Invoice, or Quote pages:
         if ((event.code === 'Enter' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) ||
             (event.code === 'Enter' && event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey)) {
             const target = event.target;
-            if (target && target.tagName === 'TEXTAREA') {
-                const chatSendButton = document.querySelector('button[aria-label="send"]');
-                if (chatSendButton) {
-                    console.log('BLOCKING ENTER/Option+ENTER via keypress event');
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
-                    return false;
-                }
+            if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
+                console.log('BLOCKING ENTER/Option+ENTER via keypress event');
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                return false;
             }
         }
     }, { capture: true });
