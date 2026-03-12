@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      1.9
+// @version      2.0
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
@@ -401,7 +401,9 @@ While on Job, Invoice, or Quote pages:
             }
 
             const button = dialog.querySelector('button[data-action-button="true"].js-dropdownButton,button.js-dropdownButton[data-action-button="true"]') ||
-                          dialog.querySelector('button.js-dropdownButton,button[aria-haspopup="true"]');
+                          dialog.querySelector('button.js-dropdownButton') ||
+                          dialog.querySelector('[aria-label="More Actions"]') ||
+                          dialog.querySelector('[role="button"][aria-haspopup="true"]');
 
             if (!button) {
                 alert('More Actions button not found.');
@@ -409,8 +411,30 @@ While on Job, Invoice, or Quote pages:
             }
 
             let rawActions = button.getAttribute('data-action-button-actions');
+
             if (!rawActions) {
-                alert('No actions found on button.');
+                // New Jobber UI: click to open the dropdown, then find and click the menu item
+                button.click();
+                const findAndClickItem = (attemptsLeft) => {
+                    const menuItems = document.querySelectorAll('[role="menuitem"], [role="option"]');
+                    for (const item of menuItems) {
+                        const text = normalizeText(item.textContent);
+                        const href = item.getAttribute('href') || '';
+                        const id = item.id || '';
+                        if (searchCriteria(text, href, id)) {
+                            console.log(`Clicking ${actionType} in dropdown menu...`);
+                            item.click();
+                            return;
+                        }
+                    }
+                    if (attemptsLeft > 0) {
+                        setTimeout(() => findAndClickItem(attemptsLeft - 1), 100);
+                    } else {
+                        button.click(); // close the menu
+                        alert(`${actionType} action not found in dropdown menu.`);
+                    }
+                };
+                setTimeout(() => findAndClickItem(3), 150);
                 return;
             }
 
