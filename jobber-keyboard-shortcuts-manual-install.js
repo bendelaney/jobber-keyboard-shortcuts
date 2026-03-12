@@ -1,10 +1,6 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-<<<<<<< HEAD
 // @version      2.0
-=======
-// @version      1.9.1
->>>>>>> cbd660f2e9c297f32e93064d408fe74686732f9c
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
@@ -12,7 +8,7 @@
 // ==/UserScript==
 
 // Jobber Actions Consolidated
-// Version 1.9.1
+// Version 2.0
 // Author: Ben Delaney
 
 /* ************************

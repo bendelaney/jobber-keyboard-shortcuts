@@ -1,9 +1,5 @@
 // Jobber Actions Consolidated
-<<<<<<< HEAD
 // Version 2.0
-=======
-// Version 1.9.1
->>>>>>> cbd660f2e9c297f32e93064d408fe74686732f9c
 // Author: Ben Delaney
 
 /* ************************
