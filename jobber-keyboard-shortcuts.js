@@ -729,7 +729,9 @@ While on Job, Invoice, or Quote pages:
                 return;
             }
 
-            const notesTab = dialog.querySelector('tab-bar-tab[data-target=".js-notesSection"]');
+            const notesTab = Array.from(dialog.querySelectorAll('button[role="tab"]')).find(
+                tab => normalizeText(tab.textContent).includes('notes')
+            );
 
             if (!notesTab) {
                 alert('Notes tab not found.');
@@ -841,7 +843,9 @@ While on Job, Invoice, or Quote pages:
                 return;
             }
 
-            const infoTab = dialog.querySelector('tab-bar-tab[data-target=".js-infoSection"]');
+            const infoTab = Array.from(dialog.querySelectorAll('button[role="tab"]')).find(
+                tab => normalizeText(tab.textContent).trim() === 'info'
+            );
 
             if (!infoTab) {
                 alert('Info tab not found.');
