@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.1
+// Version 2.2
 // Author: Ben Delaney
 
 /* ************************
@@ -37,6 +37,8 @@ While on Job, Invoice, or Quote pages:
 
     // Utility function to normalize text
     const normalizeText = (s) => (s || '').trim().toLowerCase();
+    const visitRequestViewDialogTitles = new Set(['visit', 'request']);
+    const visitRequestAnyDialogTitles = new Set(['visit', 'request', 'edit visit', 'edit request']);
 
     const isElementVisible = (element) => {
         if (!element) {
@@ -46,6 +48,12 @@ While on Job, Invoice, or Quote pages:
         const style = window.getComputedStyle(element);
         return style.display !== 'none' && style.visibility !== 'hidden' && element.getAttribute('aria-hidden') !== 'true' && element.getClientRects().length > 0;
     };
+
+    const isVisitRequestViewDialogTitle = (titleText) => visitRequestViewDialogTitles.has(titleText);
+
+    const isVisitRequestDialogTitle = (titleText) => visitRequestAnyDialogTitles.has(titleText);
+
+    const getDialogTitleText = (dialog) => normalizeText(dialog?.querySelector('.dialog-title.js-dialogTitle')?.textContent || '');
 
     const isMac = navigator.platform.includes('Mac');
 
@@ -81,56 +89,47 @@ While on Job, Invoice, or Quote pages:
     };
 
     // Get visit/request dialog information
-    const getVisitRequestDialog = () => {
-        const title = Array.from(document.querySelectorAll('.dialog-title.js-dialogTitle')).reverse().find((candidate) => {
-            const titleText = normalizeText(candidate.textContent || '');
-            const dialog = candidate.closest('[role="dialog"],.dialog-box,.modal') || candidate;
-            return (titleText === 'visit' || titleText === 'request') && isElementVisible(dialog);
+    const getVisitRequestDialog = ({ includeEdit = false } = {}) => {
+        const titleMatcher = includeEdit ? isVisitRequestDialogTitle : isVisitRequestViewDialogTitle;
+        const dialog = Array.from(document.querySelectorAll('[role="dialog"],.dialog-box,.modal')).reverse().find((candidate) => {
+            const titleText = getDialogTitleText(candidate);
+            return titleMatcher(titleText) && isElementVisible(candidate);
         }) || null;
+        const title = dialog?.querySelector('.dialog-title.js-dialogTitle') || null;
         const titleText = normalizeText(title?.textContent || '');
-        const isValid = Boolean(title && (titleText === 'visit' || titleText === 'request'));
-        const dialog = title?.closest('[role="dialog"],.dialog-box,.modal') || document;
-        return { title, titleText, isValid, dialog };
+        const isValid = Boolean(dialog && titleMatcher(titleText));
+        return { title, titleText, isValid, dialog: dialog || document };
     };
 
     const getActiveVisitRequestNoteForm = () => {
-        const candidateDialogs = [];
-        const activeDialog = document.activeElement?.closest('[role="dialog"],.dialog-box,.modal');
-
-        if (activeDialog && isElementVisible(activeDialog)) {
-            candidateDialogs.push(activeDialog);
-        }
-
         const { isValid, dialog } = getVisitRequestDialog();
-        if (isValid && dialog && !candidateDialogs.includes(dialog) && isElementVisible(dialog)) {
-            candidateDialogs.push(dialog);
+        if (!isValid || !isElementVisible(dialog)) {
+            return null;
         }
 
-        for (const candidateDialog of candidateDialogs) {
-            const noteForms = Array.from(candidateDialog.querySelectorAll('form')).map((form) => {
-                const textarea = form.querySelector('textarea[name="message"], textarea[name="note[message]"]');
-                const saveButton = Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => isElementVisible(button));
+        const noteForms = Array.from(dialog.querySelectorAll('form')).map((form) => {
+            const textarea = form.querySelector('textarea[name="message"], textarea[name="note[message]"]');
+            const saveButton = Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => isElementVisible(button));
 
-                if (!textarea || !saveButton || !isElementVisible(form) || !isElementVisible(textarea)) {
-                    return null;
-                }
-
-                return { container: form, textarea, saveButton };
-            }).filter(Boolean);
-
-            const activeForm = noteForms.find(({ container, textarea, saveButton }) => textarea === document.activeElement || saveButton === document.activeElement || container.contains(document.activeElement));
-            if (activeForm) {
-                return activeForm;
+            if (!textarea || !saveButton || !isElementVisible(form) || !isElementVisible(textarea)) {
+                return null;
             }
 
-            const populatedForm = noteForms.find(({ textarea }) => textarea.value.trim());
-            if (populatedForm) {
-                return populatedForm;
-            }
+            return { container: form, textarea, saveButton };
+        }).filter(Boolean);
 
-            if (noteForms.length) {
-                return noteForms[0];
-            }
+        const activeForm = noteForms.find(({ container, textarea, saveButton }) => textarea === document.activeElement || saveButton === document.activeElement || container.contains(document.activeElement));
+        if (activeForm) {
+            return activeForm;
+        }
+
+        const populatedForm = noteForms.find(({ textarea }) => textarea.value.trim());
+        if (populatedForm) {
+            return populatedForm;
+        }
+
+        if (noteForms.length) {
+            return noteForms[0];
         }
 
         return null;
@@ -859,13 +858,13 @@ While on Job, Invoice, or Quote pages:
         // Check if we're in a Visit/Request modal OR in an Edit Visit/Request form
         const title = document.querySelector('.dialog-title.js-dialogTitle');
         const titleText = normalizeText(title?.textContent || '');
-        
+
         // Also check if we're in an edit form
         const editForm = document.querySelector('form.to_do[id^="edit_to_do_"]');
-        
+
         const isInVisitModal = title && (titleText === 'visit' || titleText === 'request' || titleText === 'edit visit' || titleText === 'edit request');
         const isInEditForm = editForm !== null;
-        
+
         if (!isInVisitModal && !isInEditForm) {
             console.log('Not in Visit/Request modal or Edit form, ignoring CMD+CTRL+A');
             return;
@@ -962,23 +961,22 @@ While on Job, Invoice, or Quote pages:
     // Keyboard event listener with capture to intercept early - VERY aggressive capture
     // Ultra-aggressive event handler for ALL phases
     const captureShortcutModal = (event) => {
-           // DEBUG: Uncomment to log all keys while investigating shortcut capture issues.
-           // console.log('KEY PRESS:', {
-           //     type: event.type,
-           //     key: event.key,
-           //     code: event.code,
-           //     metaKey: event.metaKey,
-           //     ctrlKey: event.ctrlKey,
-           //     altKey: event.altKey,
-           //     shiftKey: event.shiftKey
-           // });
+        // DEBUG: Uncomment to log all keys while investigating shortcut capture issues.
+        // console.log('KEY PRESS:', {
+        //     type: event.type,
+        //     key: event.key,
+        //     code: event.code,
+        //     metaKey: event.metaKey,
+        //     ctrlKey: event.ctrlKey,
+        //     altKey: event.altKey,
+        //     shiftKey: event.shiftKey
+        // });
 
         const slashPressed = event.code === 'Slash' || event.key === '/' || event.key === '?';
 
         // On Mac: CMD+/
         // On Windows: CTRL+/
         const wantsShortcutsModal = slashPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey));
-
         if (wantsShortcutsModal) {
             console.log('✅ Shortcuts modal triggered!', event.type);
             event.preventDefault();
@@ -1006,9 +1004,9 @@ While on Job, Invoice, or Quote pages:
             return;
         }
 
-        const slashPressed = event.code === 'KeyK' || event.key === 'k' || event.key === 'K';
-        // On Mac: CMD+K
-        // On Windows: CTRL+K
+        const slashPressed = event.code === 'Slash' || event.key === '/' || event.key === '?';
+        // On Mac: CMD+/
+        // On Windows: CTRL+/
         const wantsShortcutsModal = slashPressed && ((isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || (!isMac && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey));
 
         if (wantsShortcutsModal) {
