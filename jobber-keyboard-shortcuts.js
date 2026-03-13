@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.0
+// Version 2.1
 // Author: Ben Delaney
 
 /* ************************
@@ -38,6 +38,15 @@ While on Job, Invoice, or Quote pages:
     // Utility function to normalize text
     const normalizeText = (s) => (s || '').trim().toLowerCase();
 
+    const isElementVisible = (element) => {
+        if (!element) {
+            return false;
+        }
+
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && element.getAttribute('aria-hidden') !== 'true' && element.getClientRects().length > 0;
+    };
+
     const isMac = navigator.platform.includes('Mac');
 
     // Check if user is currently typing in an input field
@@ -73,11 +82,58 @@ While on Job, Invoice, or Quote pages:
 
     // Get visit/request dialog information
     const getVisitRequestDialog = () => {
-        const title = document.querySelector('.dialog-title.js-dialogTitle');
+        const title = Array.from(document.querySelectorAll('.dialog-title.js-dialogTitle')).reverse().find((candidate) => {
+            const titleText = normalizeText(candidate.textContent || '');
+            const dialog = candidate.closest('[role="dialog"],.dialog-box,.modal') || candidate;
+            return (titleText === 'visit' || titleText === 'request') && isElementVisible(dialog);
+        }) || null;
         const titleText = normalizeText(title?.textContent || '');
-        const isValid = title && (titleText === 'visit' || titleText === 'request');
+        const isValid = Boolean(title && (titleText === 'visit' || titleText === 'request'));
         const dialog = title?.closest('[role="dialog"],.dialog-box,.modal') || document;
         return { title, titleText, isValid, dialog };
+    };
+
+    const getActiveVisitRequestNoteForm = () => {
+        const candidateDialogs = [];
+        const activeDialog = document.activeElement?.closest('[role="dialog"],.dialog-box,.modal');
+
+        if (activeDialog && isElementVisible(activeDialog)) {
+            candidateDialogs.push(activeDialog);
+        }
+
+        const { isValid, dialog } = getVisitRequestDialog();
+        if (isValid && dialog && !candidateDialogs.includes(dialog) && isElementVisible(dialog)) {
+            candidateDialogs.push(dialog);
+        }
+
+        for (const candidateDialog of candidateDialogs) {
+            const noteForms = Array.from(candidateDialog.querySelectorAll('form')).map((form) => {
+                const textarea = form.querySelector('textarea[name="message"], textarea[name="note[message]"]');
+                const saveButton = Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => isElementVisible(button));
+
+                if (!textarea || !saveButton || !isElementVisible(form) || !isElementVisible(textarea)) {
+                    return null;
+                }
+
+                return { container: form, textarea, saveButton };
+            }).filter(Boolean);
+
+            const activeForm = noteForms.find(({ container, textarea, saveButton }) => textarea === document.activeElement || saveButton === document.activeElement || container.contains(document.activeElement));
+            if (activeForm) {
+                return activeForm;
+            }
+
+            const populatedForm = noteForms.find(({ textarea }) => textarea.value.trim());
+            if (populatedForm) {
+                return populatedForm;
+            }
+
+            if (noteForms.length) {
+                return noteForms[0];
+            }
+        }
+
+        return null;
     };
 
     // Scroll to a card by its title
@@ -595,10 +651,18 @@ While on Job, Invoice, or Quote pages:
         let activeContainer = null;
         let activeTextarea = null;
         let activeSaveButton = null;
+
+        const activeVisitRequestNoteForm = getActiveVisitRequestNoteForm();
+        if (activeVisitRequestNoteForm) {
+            activeContainer = activeVisitRequestNoteForm.container;
+            activeTextarea = activeVisitRequestNoteForm.textarea;
+            activeSaveButton = activeVisitRequestNoteForm.saveButton;
+            console.log('Found active note form in visit/request modal');
+        }
         
         // Strategy 1: Check if there's a dialog/modal open first
         const modal = document.querySelector('.dialog-box, [role="dialog"], .modal');
-        if (modal) {
+        if (!activeContainer && modal) {
             console.log('Modal detected, looking for note form in modal...');
             const modalNoteContainer = modal.querySelector('.js-noteContainer');
             if (modalNoteContainer) {
@@ -743,7 +807,7 @@ While on Job, Invoice, or Quote pages:
 
             // Wait for the tab to switch, then focus the textarea
             setTimeout(() => {
-                const notesTextarea = dialog.querySelector('textarea[name="note[message]"]');
+                const notesTextarea = dialog.querySelector('textarea[name="message"], textarea[name="note[message]"]');
                 if (notesTextarea) {
                     console.log('Focusing Notes textarea');
                     notesTextarea.focus();
