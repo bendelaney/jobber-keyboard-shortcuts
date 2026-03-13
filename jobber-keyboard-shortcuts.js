@@ -898,16 +898,16 @@ While on Job, Invoice, or Quote pages:
     // Keyboard event listener with capture to intercept early - VERY aggressive capture
     // Ultra-aggressive event handler for ALL phases
     const captureShortcutModal = (event) => {
-        // DEBUG: Log ALL keys to see what's happening
-        console.log('KEY PRESS:', {
-            type: event.type,
-            key: event.key,
-            code: event.code,
-            metaKey: event.metaKey,
-            ctrlKey: event.ctrlKey,
-            altKey: event.altKey,
-            shiftKey: event.shiftKey
-        });
+           // DEBUG: Uncomment to log all keys while investigating shortcut capture issues.
+           // console.log('KEY PRESS:', {
+           //     type: event.type,
+           //     key: event.key,
+           //     code: event.code,
+           //     metaKey: event.metaKey,
+           //     ctrlKey: event.ctrlKey,
+           //     altKey: event.altKey,
+           //     shiftKey: event.shiftKey
+           // });
 
         const slashPressed = event.code === 'Slash' || event.key === '/' || event.key === '?';
 
