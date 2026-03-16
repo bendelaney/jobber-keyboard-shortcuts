@@ -1,114 +1,126 @@
-# Jobber Keyboard Shortcuts - Project Instructions
+# Jobber Keyboard Shortcuts
 
 ## Project Overview
-This is a userscript that adds keyboard shortcuts to Jobber (secure.getjobber.com). The project maintains two versions of the same code:
-- `jobber-keyboard-shortcuts-manual-install.js` - Full userscript with @grant metadata headers
-- `jobber-keyboard-shortcuts.js` - Bookmarklet version without metadata
+A userscript that adds keyboard shortcuts to Jobber (secure.getjobber.com). Two versions of the same code are maintained:
+- `jobber-keyboard-shortcuts-manual-install.js` - Full userscript with `@grant` metadata headers (1216 lines)
+- `jobber-keyboard-shortcuts.js` - Bookmarklet version without metadata (1208 lines)
+
+The loader (`jobber-keyboard-shortcuts-userscript.user.js`) fetches the bookmarklet version from GitHub raw URL on each page load, so users always get the latest code automatically.
 
 ## Critical Rules
 
-### Perfect Parity Between Files
-**ALWAYS maintain identical functionality between both script files.**
-- When updating any function or feature, apply the change to BOTH files
-- The only difference should be the userscript metadata headers
-- **EVERY code change MUST be applied to BOTH files in the same response**
-- Never make a change to just one file
+### 1. Perfect Parity Between Script Files
+**EVERY code change MUST be applied to BOTH `.js` files in the same response.** The only differences between them are the headers:
 
-### File-Specific Differences
-- `jobber-keyboard-shortcuts-manual-install.js` includes userscript metadata (lines 1-7):
-  ```javascript
-  // ==UserScript==
-  // @name         Jobber Keyboard Shortcuts
-  // @version      X.X
-  // @description  A collection of super helpful keyboard shortcuts for Jobber.
-  // @author       Ben Delaney
-  // @match        https://secure.getjobber.com/*
-  // @grant        none
-  // ==/UserScript==
-  ```
-- `jobber-keyboard-shortcuts.js` starts directly with the IIFE (no metadata) but includes version comment:
-  ```javascript
-  // Jobber Actions Consolidated
-  // Version X.X
-  // Author: Ben Delaney
-  ```
+**`jobber-keyboard-shortcuts-manual-install.js`** starts with userscript metadata (8 lines) THEN the version/shortcut comment block:
+```javascript
+// ==UserScript==
+// @name         Jobber Keyboard Shortcuts
+// @version      X.X
+// ...
+// ==/UserScript==
+// Jobber Actions Consolidated
+// Version X.X
+// Author: Ben Delaney
+```
 
-**CRITICAL**: When updating version numbers, update BOTH files (line 3 in manual-install.js AND line 2 in bookmarklet version).
+**`jobber-keyboard-shortcuts.js`** starts directly with the version/shortcut comment block:
+```javascript
+// Jobber Actions Consolidated
+// Version X.X
+// Author: Ben Delaney
+```
 
-### Platform Support
-- Detect OS using: `const isMac = navigator.platform.includes('Mac');`
-- **ALWAYS show platform-specific shortcuts** in ALL documentation locations:
-  - Help modal (shortcutSections array) - use ternary: `isMac ? 'COMMAND + /' : 'CTRL + /'`
-  - Console.log messages - use template literals: `` `${isMac ? 'CMD+/' : 'CTRL+/'}` ``
-  - README.md - show both: `**\`CMD + /\`** (Mac) or **\`CTRL + /\`** (Windows)`
-  - Header comments - show Mac shortcuts (primary documentation)
-- Mac shortcuts use: CMD, CMD+CTRL, CMD+OPTION
-- Windows shortcuts use: CTRL, CTRL+ALT (not CTRL+CTRL)
-- Use ternary operators for all platform-specific displays
+After the header comments, the code is **identical** in both files. Never change one without the other.
 
-### Event Handling Priority
-The `clickSaveButton()` function has a strict priority order:
-1. **HIGHEST**: Email dialog (`.js-sendToClientDialog`) - for Invoice/Quote emails
-2. **SECOND**: SMS dialog (`.js-sendToClientDialogSms`)
-3. **THIRD**: to_do form save button
-4. **FOURTH**: Note forms with modal/focus detection
+### 2. Version Numbers
+When updating version numbers, update ALL three locations:
+- `@version` in manual-install.js metadata (line 3)
+- `// Version X.X` comment in manual-install.js (line 10)
+- `// Version X.X` comment in bookmarklet.js (line 2)
 
-Never change this priority order without explicit approval.
+Bump the version for any new shortcut or significant change.
 
-### Keyboard Shortcut Patterns
-- Use `{ capture: true }` for event listeners to intercept before Jobber's handlers
-- Check for visibility with `window.getComputedStyle()` before triggering actions
-- Include both Mac and Windows key combinations
-- Prevent default behavior and stop propagation for intercepted shortcuts
+### 3. Platform-Specific Shortcuts
+Detect OS: `const isMac = navigator.platform.includes('Mac');`
 
-### Page Type Detection
-Use regex patterns for URL matching:
-- Job pages: `/\/work_orders\/\d+/`
-- Invoice pages: `/\/invoices\/\d+/`
-- Quote pages: `/\/quotes\/\d+/`
-- Combined: `/\/(work_orders|invoices|quotes)\/\d+/`
+Modifier key mapping:
+| Mac | Windows |
+|-----|---------|
+| `CMD` | `CTRL` |
+| `CMD+CTRL` | `CTRL+ALT` |
+| `CMD+OPTION` | `CTRL+ALT` |
 
-### Documentation Updates
-When adding or modifying shortcuts, update ALL locations with platform-specific instructions:
-1. **In-app modal** (shortcutSections array) - Platform-aware with ternary operators
-2. **README.md** - Show both Mac and Windows shortcuts
-3. **Header comments** (top of both files) - Show Mac shortcuts as primary
-4. **Console.log messages** (bottom of both files) - Platform-aware with template literals
+**All user-facing text must show the correct platform shortcut:**
+- **Help modal** (`shortcutSections` array): use ternary `isMac ? 'COMMAND + /' : 'CTRL + /'`
+- **Console.log messages** (bottom of both files): use template literals `` `${isMac ? 'CMD+/' : 'CTRL+/'}` ``
+- **README.md**: show both: `**\`CMD + /\`** (Mac) or **\`CTRL + /\`** (Windows)`
+- **Header comments** (top of both files): show Mac shortcuts only (primary documentation)
 
-**CRITICAL**: All documentation must show correct platform-specific shortcuts. Never show only Mac shortcuts or only Windows shortcuts in user-facing documentation. Use the `isMac` variable to dynamically display the correct shortcuts for the user's platform.
+### 4. Four Documentation Locations for Shortcuts
+When adding or modifying a shortcut, update ALL of these:
+1. **In-app help modal** (`shortcutSections` array) - platform-aware ternaries
+2. **Header comment block** (top of both files) - Mac shortcuts only
+3. **Console.log section** (bottom of both files, ~line 1202+) - platform-aware template literals
+4. **`README.md`** - both Mac and Windows
 
-When a new shortcut is added, update all instructional comments, console.logs, and the readme so that perfect parity exists between all for instructions/hints.
+### 5. `clickSaveButton()` Priority Order — DO NOT CHANGE
+1. Email dialog (`.js-sendToClientDialog`) — Invoice/Quote emails
+2. SMS dialog (`.js-sendToClientDialogSms`)
+3. To-do form save button
+4. Note forms with modal/focus detection
 
-Whenever a new shortcut is added or a significant change is made, update the version number in the header.
+## Code Architecture
 
-### Code Style
-- Use `const normalizeText = (s) => (s || '').trim().toLowerCase();` for text comparison
-- Include console.log debugging messages for shortcut actions
-- Use `scrollIntoView({ behavior: 'smooth', block: 'start' })` for scroll actions
-- Prefer `.closest()` for DOM traversal
+Single IIFE wrapping all code. Structure:
 
-### Testing Checklist
-Before committing changes:
-- [ ] Both script files updated with identical changes
-- [ ] Modal help dialog shows platform-specific shortcuts (uses ternary operators)
-- [ ] README.md shows BOTH Mac AND Windows shortcuts for all shortcuts
-- [ ] Header comments at the beginning of both files show Mac shortcuts
-- [ ] Console.log entries at the end of both files show platform-specific shortcuts (use template literals with `isMac`)
-- [ ] All platform-specific shortcuts follow the correct mapping:
-  - Mac `CMD+CTRL` → Windows `CTRL+ALT`
-  - Mac `CMD+OPTION` → Windows `CTRL+ALT`
-  - Mac `CMD` → Windows `CTRL`
-- [ ] Tested on Mac (if OS-specific)
-- [ ] Tested on Windows (if OS-specific)
-- [ ] Console logs confirm shortcut execution
+1. **Utility functions** — `normalizeText()`, `isElementVisible()`, `isUserTyping()`, `isInMessagesInterface()`, dialog title helpers
+2. **Action functions** — `clickSaveButton()`, `clickEditButton()`, `toggleSidePanel()`, tab/scroll actions, help modal builder
+3. **Event listeners** — `keydown` (capture phase) for all shortcuts, `keypress` backup for Messages Enter-blocking. Both use `{ capture: true }`
 
-## Common Selectors
-- Email dialog: `.js-sendToClientDialog`
-- SMS dialog: `.js-sendToClientDialogSms`
-- Card titles: `.card-headerTitle`
-- Note containers: `.js-noteContainer`
-- Note textareas: `textarea[name="note[message]"]`
-- Save buttons: `button.js-saveNote`
+### Key Patterns
+- `{ capture: true }` on event listeners to intercept before Jobber's handlers
+- Visibility checks via `window.getComputedStyle()` before triggering actions
+- `e.preventDefault()` + `e.stopPropagation()` + `e.stopImmediatePropagation()` for intercepted shortcuts
+- `scrollIntoView({ behavior: 'smooth', block: 'start' })` for scroll actions
+- `.closest()` for DOM traversal
+- `normalizeText()` for all text comparisons
+- Console.log debugging messages for shortcut actions
+
+### Page Detection Regex
+```javascript
+/\/work_orders\/\d+/    // Job pages
+/\/invoices\/\d+/       // Invoice pages
+/\/quotes\/\d+/         // Quote pages
+/\/(work_orders|invoices|quotes)\/\d+/  // Combined
+```
+
+### Common DOM Selectors
+| Selector | Purpose |
+|----------|---------|
+| `.js-sendToClientDialog` | Email dialog |
+| `.js-sendToClientDialogSms` | SMS dialog |
+| `.card-headerTitle` | Card section titles |
+| `.js-noteContainer` | Note containers |
+| `textarea[name="note[message]"]` | Note textareas |
+| `button.js-saveNote` | Save buttons |
+| `.dialog-title.js-dialogTitle` | Dialog title text |
+
+## Current Shortcuts (v2.2)
+
+**Global:** `CMD+/` help, `CMD+\` activity feed, `CMD+OPTION+\` messages, `CMD+ENTER` save
+
+**Visit Modal:** `CMD+CTRL+E` edit, `CMD+CTRL+T` text reminder, `CMD+CTRL+A` assign crew, `SHIFT+N` notes tab, `SHIFT+I` info tab
+
+**Job/Invoice/Quote pages:** `SHIFT+V` scroll to visits (job only), `SHIFT+N` scroll to notes
+
+## Pre-Commit Checklist
+- [ ] Both script files updated with identical code changes
+- [ ] Help modal shows platform-specific shortcuts (ternary operators)
+- [ ] README.md shows both Mac AND Windows shortcuts
+- [ ] Header comments show Mac shortcuts
+- [ ] Console.log entries use platform-aware template literals with `isMac`
+- [ ] Version bumped in all three locations if new shortcut or significant change
 
 ## Deployment
-Changes are automatically loaded via the loader script in `jobber-keyboard-shortcuts-userscript.user.js` which fetches from GitHub raw URL on each Jobber page load.
+Changes to `jobber-keyboard-shortcuts.js` are automatically picked up by the loader userscript. No build step required — just push to `main`.
