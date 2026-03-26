@@ -581,8 +581,8 @@ While on Job, Invoice, or Quote pages:
         }
 
         // Find the Edit button inside the popover
-        // Structure: ._buttonContainer_1dxlc_1 > ._button_1dxlc_1 > button > span (text: "Edit")
-        const buttonContainer = popover.querySelector('._buttonContainer_1dxlc_1');
+        // Structure: ._buttonContainer_*_1 > ._button_*_1 > button > span (text: "Edit")
+        const buttonContainer = popover.querySelector('[class*="_buttonContainer_"]');
 
         if (!buttonContainer) {
             return false;
