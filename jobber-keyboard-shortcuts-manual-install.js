@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      2.5
+// @version      2.6
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
 // @grant        none
 // ==/UserScript==
 // Jobber Actions Consolidated
-// Version 2.5
+// Version 2.6
 // Author: Ben Delaney
 
 /* ************************
@@ -83,6 +83,34 @@ While on Job, Invoice, or Quote pages:
         element?.getAttribute('title') ||
         ''
     );
+
+    const pressElement = (element) => {
+        if (!element) {
+            return;
+        }
+
+        element.focus?.({ preventScroll: true });
+
+        ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach((eventType) => {
+            const EventConstructor = eventType.startsWith('pointer') && window.PointerEvent ? window.PointerEvent : window.MouseEvent;
+            const eventOptions = {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                button: 0,
+                buttons: eventType.endsWith('down') ? 1 : 0,
+                pointerId: 1,
+                pointerType: 'mouse',
+                isPrimary: true
+            };
+
+            try {
+                element.dispatchEvent(new EventConstructor(eventType, eventOptions));
+            } catch (error) {
+                element.dispatchEvent(new MouseEvent(eventType, eventOptions));
+            }
+        });
+    };
 
     const getVisibleSendSubmitButton = (form) => Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => {
         const actionText = getElementActionText(button);
@@ -170,16 +198,34 @@ While on Job, Invoice, or Quote pages:
         return Boolean(sendButton);
     };
 
+    const findMoreActionsButton = (container = document) => {
+        const candidates = Array.from(container.querySelectorAll(
+            '[aria-label="More Actions"], [aria-label^="More Actions" i], [data-custom-action-name*="More Actions" i], [role="button"][aria-haspopup="true"], button[aria-haspopup="true"]'
+        ));
+
+        return candidates.find((candidate) => {
+            if (!isElementVisible(candidate)) {
+                return false;
+            }
+
+            const actionText = getElementActionText(candidate);
+            return actionText.includes('more actions') || Boolean(candidate.querySelector('button, svg[data-testid="more"]'));
+        }) || null;
+    };
+
     // Get visit/request dialog information
     const getVisitRequestDialog = ({ includeEdit = false } = {}) => {
         const titleMatcher = includeEdit ? isVisitRequestDialogTitle : isVisitRequestViewDialogTitle;
-        const dialog = Array.from(document.querySelectorAll('[role="dialog"],.dialog-box,.modal')).reverse().find((candidate) => {
+        const visibleDialogs = Array.from(document.querySelectorAll('[role="dialog"],.dialog-box,.modal')).reverse().filter(isElementVisible);
+        const titledDialog = visibleDialogs.find((candidate) => {
             const titleText = getDialogTitleText(candidate);
-            return titleMatcher(titleText) && isElementVisible(candidate);
+            return titleMatcher(titleText);
         }) || null;
+        const fallbackDialog = titledDialog || visibleDialogs.find((candidate) => findMoreActionsButton(candidate)) || null;
+        const dialog = fallbackDialog;
         const title = dialog?.querySelector('.dialog-title.js-dialogTitle') || null;
         const titleText = normalizeText(title?.textContent || '');
-        const isValid = Boolean(dialog && titleMatcher(titleText));
+        const isValid = Boolean(titledDialog || (dialog && findMoreActionsButton(dialog)));
         return { title, titleText, isValid, dialog: dialog || document };
     };
 
@@ -625,8 +671,7 @@ While on Job, Invoice, or Quote pages:
 
             const button = dialog.querySelector('button[data-action-button="true"].js-dropdownButton,button.js-dropdownButton[data-action-button="true"]') ||
                           dialog.querySelector('button.js-dropdownButton') ||
-                          dialog.querySelector('[aria-label="More Actions"]') ||
-                          dialog.querySelector('[role="button"][aria-haspopup="true"]');
+                          findMoreActionsButton(dialog);
 
             if (!button) {
                 alert('More Actions button not found.');
@@ -636,28 +681,29 @@ While on Job, Invoice, or Quote pages:
             let rawActions = button.getAttribute('data-action-button-actions');
 
             if (!rawActions) {
-                // New Jobber UI: click to open the dropdown, then find and click the menu item
-                button.click();
+                // New Jobber UI: press the React Aria trigger, then find and press the menu item
+                pressElement(button);
                 const findAndClickItem = (attemptsLeft) => {
-                    const menuItems = document.querySelectorAll('[role="menuitem"], [role="option"]');
+                    const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"]')).filter(isElementVisible);
                     for (const item of menuItems) {
                         const text = normalizeText(item.textContent);
                         const href = item.getAttribute('href') || '';
                         const id = item.id || '';
-                        if (searchCriteria(text, href, id)) {
+                        const iconName = item.querySelector('svg[data-testid]')?.getAttribute('data-testid') || '';
+                        if (searchCriteria(text, href, id, iconName)) {
                             console.log(`Clicking ${actionType} in dropdown menu...`);
-                            item.click();
+                            pressElement(item);
                             return;
                         }
                     }
                     if (attemptsLeft > 0) {
                         setTimeout(() => findAndClickItem(attemptsLeft - 1), 100);
                     } else {
-                        button.click(); // close the menu
+                        pressElement(button); // close the menu
                         alert(`${actionType} action not found in dropdown menu.`);
                     }
                 };
-                setTimeout(() => findAndClickItem(3), 150);
+                setTimeout(() => findAndClickItem(10), 150);
                 return;
             }
 
@@ -723,8 +769,8 @@ While on Job, Invoice, or Quote pages:
 
     // Function 1: Open Edit Dialog (CMD+CTRL+E)
     function openEditDialog() {
-        openActionDialog('Edit', (text, href, id) => {
-            return text.includes('edit') || /\/edit\.dialog\b/.test(href);
+        openActionDialog('Edit', (text, href, id, iconName) => {
+            return text === 'edit' || text.includes('edit') || iconName === 'edit' || /\/edit\.dialog\b/.test(href);
         });
     }
 
@@ -761,8 +807,8 @@ While on Job, Invoice, or Quote pages:
 
     // Function 2: Open Text Reminder Dialog (CMD+CTRL+T)
     function openTextReminderDialog() {
-        openActionDialog('Text Reminder', (text, href, id) => {
-            return id === 'sms' || text.includes('text reminder') || /\/comms\/sms\.dialog\b/.test(href);
+        openActionDialog('Text Reminder', (text, href, id, iconName) => {
+            return id === 'sms' || iconName === 'sms' || text.includes('text reminder') || /\/comms\/sms\.dialog\b/.test(href);
         });
     }
 
