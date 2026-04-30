@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.8
+// Version 2.9
 // Author: Ben Delaney
 
 /* ************************
@@ -1209,9 +1209,12 @@ While on Job, Invoice, or Quote pages:
         }
     }
 
+    const isJobPagePath = () => /\/(work_orders|jobs)\/\d+/.test(window.location.pathname);
+    const isNotesShortcutPagePath = () => /\/(work_orders|jobs|invoices|quotes)\/\d+/.test(window.location.pathname);
+
     // Function 9: Scroll to Scheduled Visits section (SHIFT+V)
     function scrollToVisitsCard() {
-        scrollToCardByTitle('Visits', /\/work_orders\/\d+/, ['Scheduled visits']);
+        scrollToCardByTitle('Visits', /\/(work_orders|jobs)\/\d+/, ['Scheduled visits']);
     }
 
     const getNewNoteTextarea = () => {
@@ -1456,7 +1459,7 @@ While on Job, Invoice, or Quote pages:
                 switchToNotesTab();
             } else {
                 // Check if we're on a job, invoice, or quote page - start a new note
-                const isOnSupportedPage = /\/(work_orders|invoices|quotes)\/\d+/.test(window.location.pathname);
+                const isOnSupportedPage = isNotesShortcutPagePath();
 
                 if (isOnSupportedPage) {
                     event.preventDefault();
@@ -1487,7 +1490,7 @@ While on Job, Invoice, or Quote pages:
             }
 
             // Only intercept if we're on a job page
-            const isJobPage = /\/work_orders\/\d+/.test(window.location.pathname);
+            const isJobPage = isJobPagePath();
 
             if (isJobPage) {
                 event.preventDefault();
