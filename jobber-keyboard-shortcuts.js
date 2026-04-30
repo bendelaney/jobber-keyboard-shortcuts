@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.2
+// Version 2.3
 // Author: Ben Delaney
 
 /* ************************
@@ -9,7 +9,7 @@ KEYBOARD SHORTCUTS:
 Global:
 - CMD + \ : Toggle 'Activity Feed' side panel
 - CMD + OPTION + \ : Toggle 'Messages' side panel
-- CMD + ENTER : Click Save Button (while in any Visit Modal, Note input, or email form.)
+- CMD + ENTER : Click Save/Send Button (while in any Visit Modal, Note input, email form, or text message form.)
 - CMD + / : Show keyboard shortcuts reference
 
 While viewing a JOB VISIT Modal or Scheduler Popover:
@@ -68,10 +68,84 @@ While on Job, Invoice, or Quote pages:
         );
     };
 
+    const getElementActionText = (element) => normalizeText(
+        element?.textContent ||
+        element?.value ||
+        element?.getAttribute('aria-label') ||
+        element?.getAttribute('title') ||
+        ''
+    );
+
+    const getVisibleSendSubmitButton = (form) => Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => {
+        const actionText = getElementActionText(button);
+        return isElementVisible(button) &&
+            !button.disabled &&
+            button.getAttribute('aria-disabled') !== 'true' &&
+            (actionText === 'send' || actionText.includes('send message') || actionText.includes('send text'));
+    }) || null;
+
+    const getActiveSendTextForm = () => {
+        const sendTextForms = Array.from(document.querySelectorAll('form')).map((form) => {
+            const textarea = form.querySelector('textarea[name="message"]');
+            const sendButton = getVisibleSendSubmitButton(form);
+
+            if (!textarea || !sendButton || !isElementVisible(form) || !isElementVisible(textarea)) {
+                return null;
+            }
+
+            const hasRecipientField = Boolean(
+                form.querySelector('input[aria-label="recipient" i], input#To, input[placeholder*="mobile" i], input[placeholder*="phone" i]')
+            );
+            const hasMessageLabel = Array.from(form.querySelectorAll('label')).some((label) => {
+                const labelFor = label.getAttribute('for');
+                return normalizeText(label.textContent) === 'message' || (textarea.id && labelFor === textarea.id);
+            });
+            const hasMessageCounter = Boolean(form.querySelector('[aria-label^="Message length" i], [aria-label*="characters" i]'));
+            const hasClientHubPreview = normalizeText(form.textContent).includes('your client can view') || normalizeText(form.textContent).includes('tap https://');
+            const isLegacySmsDialog = Boolean(form.closest('.js-sendToClientDialogSms'));
+
+            if (!hasRecipientField && !hasMessageLabel && !hasMessageCounter && !hasClientHubPreview && !isLegacySmsDialog) {
+                return null;
+            }
+
+            return { container: form, textarea, sendButton };
+        }).filter(Boolean);
+
+        const activeForm = sendTextForms.find(({ container, textarea, sendButton }) =>
+            textarea === document.activeElement || sendButton === document.activeElement || container.contains(document.activeElement)
+        );
+        if (activeForm) {
+            return activeForm;
+        }
+
+        const populatedForm = sendTextForms.find(({ textarea }) => textarea.value.trim());
+        if (populatedForm) {
+            return populatedForm;
+        }
+
+        if (sendTextForms.length) {
+            return sendTextForms[0];
+        }
+
+        return null;
+    };
+
+    const submitSendTextForm = ({ textarea, sendButton }) => {
+        if (textarea) {
+            ['input', 'change'].forEach((eventType) => {
+                textarea.dispatchEvent(new Event(eventType, { bubbles: true }));
+            });
+        }
+
+        console.log('Send text form detected, clicking Send button');
+        sendButton.click();
+    };
+
     // Check if we're in the Messages interface - robust detection
     const isInMessagesInterface = () => {
         // Check for various possible selectors for the send button
         const sendButton =
+            getActiveSendTextForm() ||
             document.querySelector('button[aria-label="send"]') ||
             document.querySelector('button[aria-label="Send"]') ||
             document.querySelector('button[aria-label="Send message"]') ||
@@ -85,7 +159,7 @@ While on Job, Invoice, or Quote pages:
             (document.querySelector('[aria-label*="Message" i]') &&
              document.querySelector('form button[type="submit"]'));
 
-        return sendButton !== null;
+        return Boolean(sendButton);
     };
 
     // Get visit/request dialog information
@@ -209,7 +283,7 @@ While on Job, Invoice, or Quote pages:
                 { combo: isMac ? 'COMMAND + /' : 'CTRL + /', description: 'Show this shortcuts reference' },
                 { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity Feed</strong>' side panel" },
                 { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle '<strong>Messages</strong>' side panel" },
-                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save</strong> button in visit modals, notes, or email forms' },
+                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save/Send</strong> button in visit modals, notes, email forms, or text message forms' },
             ]
         },
         {
@@ -622,7 +696,7 @@ While on Job, Invoice, or Quote pages:
             }
         }
         
-        // SECOND PRIORITY: Check for SMS dialog send button
+        // SECOND PRIORITY: Check for SMS/send text dialog send button
         const smsDialog = document.querySelector('.js-sendToClientDialogSms');
         if (smsDialog) {
             const smsSendButton = smsDialog.querySelector('button.js-formSubmit[data-form="form.sendToClientDialogSms"]');
@@ -631,6 +705,12 @@ While on Job, Invoice, or Quote pages:
                 smsSendButton.click();
                 return;
             }
+        }
+
+        const activeSendTextForm = getActiveSendTextForm();
+        if (activeSendTextForm) {
+            submitSendTextForm(activeSendTextForm);
+            return;
         }
         
         // THIRD PRIORITY: Original to_do form save button
@@ -772,7 +852,13 @@ While on Job, Invoice, or Quote pages:
     // Function 5: Toggle Activity Feed (CMD+\)
     function toggleActivityFeed() {
         const activityButton = document.querySelector('#js-openNotifications') ||
-                               document.querySelector('button[aria-label="Open Activity Feed"]');
+                               document.querySelector('button[aria-label="Open Activity Feed"]') ||
+                               document.querySelector('button[aria-label^="Open Activity Feed" i]') ||
+                               document.querySelector('button[data-custom-action-name*="Open Activity Feed" i]') ||
+                               Array.from(document.querySelectorAll('button')).find((button) =>
+                                   normalizeText(button.getAttribute('aria-label')).includes('activity feed') &&
+                                   button.querySelector('svg[data-testid="reminder"]')
+                               );
 
         if (activityButton) {
             console.log('Activity feed button found, clicking...');
@@ -1148,7 +1234,15 @@ While on Job, Invoice, or Quote pages:
             // Check if we're in the Messages interface
             const target = event.target;
 
-            if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
+            const activeSendTextForm = getActiveSendTextForm();
+
+            if (target && target.tagName === 'TEXTAREA' && activeSendTextForm && activeSendTextForm.container.contains(target)) {
+                // We're in the modern Send Text form, send the message
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                console.log('CMD+ENTER in Send Text form: sending message');
+                submitSendTextForm(activeSendTextForm);
+            } else if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
                 // We're in Messages interface, send the message
                 // Find the send button using multiple strategies
                 const sendButton =
@@ -1204,6 +1298,6 @@ While on Job, Invoice, or Quote pages:
     console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job, Invoice, Quote pages)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
     console.log('- SHIFT+V: Scroll to Visits Card (on Job page)');
-    console.log(`- ${isMac ? 'CMD+ENTER' : 'CTRL+ENTER'}: Click Save Button`);
+    console.log(`- ${isMac ? 'CMD+ENTER' : 'CTRL+ENTER'}: Click Save/Send Button`);
     console.log('========================================');
 })();
