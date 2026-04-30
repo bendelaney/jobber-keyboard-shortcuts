@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      2.6
+// @version      2.7
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
 // @grant        none
 // ==/UserScript==
 // Jobber Actions Consolidated
-// Version 2.6
+// Version 2.7
 // Author: Ben Delaney
 
 /* ************************
@@ -335,6 +335,37 @@ While on Job, Invoice, or Quote pages:
         }, 150);
     };
 
+    const getScrollableAncestor = (element) => {
+        let current = element?.parentElement || null;
+
+        while (current && current !== document.body && current !== document.documentElement) {
+            const style = window.getComputedStyle(current);
+            const canScrollY = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight + 1;
+            if (canScrollY) {
+                return current;
+            }
+            current = current.parentElement;
+        }
+
+        return document.scrollingElement || document.documentElement;
+    };
+
+    const scrollElementIntoContainerView = (element, offset = 16) => {
+        const scrollContainer = getScrollableAncestor(element);
+
+        if (!scrollContainer || scrollContainer === document.documentElement || scrollContainer === document.body) {
+            const targetTop = element.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top: Math.max(targetTop, 0), behavior: 'smooth' });
+            return scrollContainer;
+        }
+
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        const targetTop = scrollContainer.scrollTop + elementRect.top - containerRect.top - offset;
+        scrollContainer.scrollTo({ top: Math.max(targetTop, 0), behavior: 'smooth' });
+        return scrollContainer;
+    };
+
     // Scroll to a card/section by its heading text
     const scrollToCardByTitle = (cardTitle, pagePathRegex, aliases = []) => {
         // Check if we're on a supported page
@@ -362,12 +393,11 @@ While on Job, Invoice, or Quote pages:
         const scrollTarget =
             foundTitle.closest('div.card') ||
             foundTitle.closest('section, article, [data-testid="ATL-Card"]') ||
-            foundTitle.closest('.flex.flex-col') ||
             foundTitle.parentElement;
 
         if (scrollTarget) {
             console.log(`Scrolling to ${foundTitle.textContent.trim() || cardTitle} section`);
-            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollElementIntoContainerView(scrollTarget);
         } else {
             console.log('Could not find section element to scroll to');
         }
