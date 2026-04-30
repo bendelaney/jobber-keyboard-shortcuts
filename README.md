@@ -8,7 +8,7 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 - **`CMD + /`** (Mac) or **`CTRL + /`** (Windows) - Show **keyboard shortcuts reference** modal
 - **`CMD + \`** (Mac) or **`CTRL + \`** (Windows) - Toggle **Activity Feed** side panel
 - **`CMD + OPTION + \`** (Mac) or **`CTRL + ALT + \`** (Windows) - Toggle **Messages** side panel
-- **`CMD + ENTER`** (Mac) or **`CTRL + ENTER`** (Windows) - Click **Save/Send** Button (works in Visit Modals, Note inputs, email forms, and text message forms)
+- **`CMD + ENTER`** (Mac) or **`CTRL + ENTER`** (Windows) - Click **Save/Send** Button (works in Visit Modals, Note inputs, email forms, text message forms, and new note forms)
 
 ### While Viewing a Visit Modal
 - **`CMD + CTRL + E`** (Mac) or **`CTRL + ALT + E`** (Windows) - Open visit **Edit** dialog
@@ -19,7 +19,7 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 
 ### While on Job / Invoice / Quote Pages
 - **`SHIFT + V`** - Scroll to **Scheduled visits** section (job page only)
-- **`SHIFT + N`** - Scroll to **Internal Notes** section
+- **`SHIFT + N`** - Start a new **Note** and focus the note field
 
 ## Installation
 

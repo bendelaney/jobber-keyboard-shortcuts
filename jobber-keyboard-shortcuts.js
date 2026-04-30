@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.4
+// Version 2.5
 // Author: Ben Delaney
 
 /* ************************
@@ -9,7 +9,7 @@ KEYBOARD SHORTCUTS:
 Global:
 - CMD + \ : Toggle 'Activity Feed' side panel
 - CMD + OPTION + \ : Toggle 'Messages' side panel
-- CMD + ENTER : Click Save/Send Button (while in any Visit Modal, Note input, email form, or text message form.)
+- CMD + ENTER : Click Save/Send Button (while in any Visit Modal, Note input, email form, text message form, or new note form.)
 - CMD + / : Show keyboard shortcuts reference
 
 While viewing a JOB VISIT Modal or Scheduler Popover:
@@ -25,7 +25,7 @@ While on a Job page:
  - SHIFT + V : Scroll to Scheduled visits section
 
 While on Job, Invoice, or Quote pages:
- - SHIFT + N : Scroll to Internal Notes section
+ - SHIFT + N : Start a new note
 */
 
 (function() {
@@ -209,6 +209,78 @@ While on Job, Invoice, or Quote pages:
         return null;
     };
 
+    const getLeaveNoteTextareaInForm = (form) => {
+        if (!form || !isElementVisible(form)) {
+            return null;
+        }
+
+        const labels = Array.from(form.querySelectorAll('label')).filter((label) =>
+            isElementVisible(label) && normalizeText(label.textContent) === 'leave a note'
+        );
+
+        for (const label of labels) {
+            const fieldId = label.getAttribute('for');
+            const textarea = fieldId ? document.getElementById(fieldId) : label.parentElement?.querySelector('textarea');
+            if (textarea && form.contains(textarea) && textarea.tagName === 'TEXTAREA' && isElementVisible(textarea)) {
+                return textarea;
+            }
+        }
+
+        return null;
+    };
+
+    const getVisibleSaveSubmitButton = (form) => Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]')).find((button) => {
+        const actionText = getElementActionText(button);
+        return isElementVisible(button) &&
+            !button.disabled &&
+            button.getAttribute('aria-disabled') !== 'true' &&
+            (actionText === 'save' || actionText.includes('save note'));
+    }) || null;
+
+    const getActiveNewNoteForm = () => {
+        const noteForms = Array.from(document.querySelectorAll('form')).map((form) => {
+            const textarea = getLeaveNoteTextareaInForm(form);
+            const saveButton = getVisibleSaveSubmitButton(form);
+
+            if (!textarea || !saveButton) {
+                return null;
+            }
+
+            return { container: form, textarea, saveButton };
+        }).filter(Boolean);
+
+        const activeForm = noteForms.find(({ container, textarea, saveButton }) =>
+            textarea === document.activeElement || saveButton === document.activeElement || container.contains(document.activeElement)
+        );
+        if (activeForm) {
+            return activeForm;
+        }
+
+        const populatedForm = noteForms.find(({ textarea }) => textarea.value.trim());
+        if (populatedForm) {
+            return populatedForm;
+        }
+
+        if (noteForms.length) {
+            return noteForms[0];
+        }
+
+        return null;
+    };
+
+    const submitNewNoteForm = ({ textarea, saveButton }) => {
+        if (textarea) {
+            ['input', 'change', 'keyup'].forEach((eventType) => {
+                textarea.dispatchEvent(new Event(eventType, { bubbles: true }));
+            });
+        }
+
+        setTimeout(() => {
+            console.log('New note form detected, clicking Save button');
+            saveButton.click();
+        }, 150);
+    };
+
     // Scroll to a card/section by its heading text
     const scrollToCardByTitle = (cardTitle, pagePathRegex, aliases = []) => {
         // Check if we're on a supported page
@@ -286,7 +358,7 @@ While on Job, Invoice, or Quote pages:
                 { combo: isMac ? 'COMMAND + /' : 'CTRL + /', description: 'Show this shortcuts reference' },
                 { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity Feed</strong>' side panel" },
                 { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle '<strong>Messages</strong>' side panel" },
-                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save/Send</strong> button in visit modals, notes, email forms, or text message forms' },
+                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save/Send</strong> button in visit modals, notes, email forms, text message forms, or new note forms' },
             ]
         },
         {
@@ -303,7 +375,7 @@ While on Job, Invoice, or Quote pages:
             title: 'Job / Invoice / Quote Pages',
             shortcuts: [
                 { combo: 'SHIFT + V', description: 'Scroll to <strong>Scheduled visits</strong> section (Job pages only)' },
-                { combo: 'SHIFT + N', description: 'Scroll to Internal <strong>Notes</strong> section' }
+                { combo: 'SHIFT + N', description: 'Start a new <strong>Note</strong>' }
             ]
         }
     ];
@@ -726,6 +798,12 @@ While on Job, Invoice, or Quote pages:
             saveButton.click();
             return;
         }
+
+        const activeNewNoteForm = getActiveNewNoteForm();
+        if (activeNewNoteForm) {
+            submitNewNoteForm(activeNewNoteForm);
+            return;
+        }
         
         // FOURTH PRIORITY: Note forms, prioritize modal context over main page
         console.log('Looking for note save functionality...');
@@ -1018,9 +1096,89 @@ While on Job, Invoice, or Quote pages:
         scrollToCardByTitle('Visits', /\/work_orders\/\d+/, ['Scheduled visits']);
     }
 
-    // Function 10: Scroll to Internal Notes Card (SHIFT+N on Job/Invoice/Quote page)
-    function scrollToInternalNotesCard() {
-        scrollToCardByTitle('Internal notes', /\/(work_orders|invoices|quotes)\/\d+/);
+    const getNewNoteTextarea = () => {
+        const leaveNoteLabels = Array.from(document.querySelectorAll('label')).filter((label) =>
+            isElementVisible(label) && normalizeText(label.textContent) === 'leave a note'
+        );
+
+        for (const label of leaveNoteLabels) {
+            const fieldId = label.getAttribute('for');
+            const textarea = fieldId ? document.getElementById(fieldId) : label.parentElement?.querySelector('textarea');
+            if (textarea && textarea.tagName === 'TEXTAREA' && isElementVisible(textarea)) {
+                return textarea;
+            }
+        }
+
+        return Array.from(document.querySelectorAll('textarea[name="message"]')).find((textarea) => {
+            if (!isElementVisible(textarea)) {
+                return false;
+            }
+
+            let container = textarea.parentElement;
+            while (container && container !== document.body) {
+                const hasLeaveNoteLabel = Array.from(container.querySelectorAll('label')).some((label) =>
+                    normalizeText(label.textContent) === 'leave a note'
+                );
+                if (hasLeaveNoteLabel) {
+                    return true;
+                }
+                container = container.parentElement;
+            }
+
+            return false;
+        }) || null;
+    };
+
+    const focusNewNoteTextarea = (attemptsLeft = 20) => {
+        const textarea = getNewNoteTextarea();
+        if (textarea) {
+            console.log('Focusing new note textarea');
+            textarea.focus();
+            return;
+        }
+
+        if (attemptsLeft > 0) {
+            setTimeout(() => focusNewNoteTextarea(attemptsLeft - 1), 100);
+        } else {
+            console.warn('New note textarea not found after clicking Add note');
+        }
+    };
+
+    // Function 10: Start a new note (SHIFT+N on Job/Invoice/Quote page)
+    function startNewNote() {
+        const notesHeadings = Array.from(document.querySelectorAll('h1, h2, h3, h4, [role="heading"]')).filter((heading) =>
+            isElementVisible(heading) && normalizeText(heading.textContent) === 'notes'
+        );
+
+        let addNoteButton = null;
+
+        for (const heading of notesHeadings) {
+            const siblings = Array.from(heading.parentElement?.children || []);
+            const headingIndex = siblings.indexOf(heading);
+            const buttonAfterHeading = headingIndex >= 0 ? siblings.slice(headingIndex + 1).find((element) =>
+                element.tagName === 'BUTTON' &&
+                isElementVisible(element) &&
+                (normalizeText(element.getAttribute('aria-label')) === 'add' || normalizeText(element.textContent).includes('add') || element.querySelector('svg[data-testid="add"]'))
+            ) : null;
+
+            addNoteButton = buttonAfterHeading || Array.from(heading.parentElement?.querySelectorAll('button') || []).find((button) =>
+                isElementVisible(button) &&
+                (normalizeText(button.getAttribute('aria-label')) === 'add' || normalizeText(button.textContent).includes('add') || button.querySelector('svg[data-testid="add"]'))
+            );
+
+            if (addNoteButton) {
+                break;
+            }
+        }
+
+        if (!addNoteButton) {
+            alert('Add note button not found on this page.');
+            return;
+        }
+
+        console.log('Notes Add button found, clicking...');
+        addNoteButton.click();
+        focusNewNoteTextarea();
     }
 
     // Block Escape key in Edit dialogs - using multiple event listeners for maximum coverage
@@ -1165,7 +1323,7 @@ While on Job, Invoice, or Quote pages:
             event.preventDefault();
             toggleActivityFeed();
         }
-        // Check for SHIFT+N (Switch to Notes Tab in modal OR Scroll to Internal Notes on Job page)
+        // Check for SHIFT+N (Switch to Notes Tab in modal OR start a new note on Job/Invoice/Quote page)
         else if (isModifierCombo(event, 'shift') && event.code === 'KeyN') {
             if (isUserTyping()) {
                 return;
@@ -1179,12 +1337,12 @@ While on Job, Invoice, or Quote pages:
                 event.preventDefault();
                 switchToNotesTab();
             } else {
-                // Check if we're on a job, invoice, or quote page - scroll to Internal Notes
+                // Check if we're on a job, invoice, or quote page - start a new note
                 const isOnSupportedPage = /\/(work_orders|invoices|quotes)\/\d+/.test(window.location.pathname);
 
                 if (isOnSupportedPage) {
                     event.preventDefault();
-                    scrollToInternalNotesCard();
+                    startNewNote();
                 }
                 // If neither condition met, let default behavior happen (typing "N")
             }
@@ -1298,7 +1456,7 @@ While on Job, Invoice, or Quote pages:
     console.log(`- ${isMac ? 'CMD+/' : 'CTRL+/'}: Show shortcuts help modal`);
     console.log(`- ${isMac ? 'CMD+OPTION+\\' : 'CTRL+ALT+\\'}: Toggle Text Message Inbox`);
     console.log(`- ${isMac ? 'CMD+\\' : 'CTRL+\\'}: Toggle Activity Feed`);
-    console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job, Invoice, Quote pages)');
+    console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR start a new note (on Job, Invoice, Quote pages)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
     console.log('- SHIFT+V: Scroll to Scheduled visits section (on Job page)');
     console.log(`- ${isMac ? 'CMD+ENTER' : 'CTRL+ENTER'}: Click Save/Send Button`);
