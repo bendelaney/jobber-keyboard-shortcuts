@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.7
+// Version 2.8
 // Author: Ben Delaney
 
 /* ************************
@@ -37,8 +37,8 @@ While on Job, Invoice, or Quote pages:
 
     // Utility function to normalize text
     const normalizeText = (s) => (s || '').trim().toLowerCase();
-    const visitRequestViewDialogTitles = new Set(['visit', 'request']);
-    const visitRequestAnyDialogTitles = new Set(['visit', 'request', 'edit visit', 'edit request']);
+    const visitRequestViewDialogTitles = new Set(['visit', 'request', 'visit details', 'request details']);
+    const visitRequestAnyDialogTitles = new Set(['visit', 'request', 'visit details', 'request details', 'edit visit', 'edit request']);
 
     const isElementVisible = (element) => {
         if (!element) {
@@ -53,7 +53,9 @@ While on Job, Invoice, or Quote pages:
 
     const isVisitRequestDialogTitle = (titleText) => visitRequestAnyDialogTitles.has(titleText);
 
-    const getDialogTitleText = (dialog) => normalizeText(dialog?.querySelector('.dialog-title.js-dialogTitle')?.textContent || '');
+    const getDialogTitleText = (dialog) => normalizeText(
+        dialog?.querySelector('.dialog-title.js-dialogTitle, #ATL-Modal-Header, [data-testid="modal-header"] h1, [data-testid="modal-header"] h2, [data-testid="modal-header"] [role="heading"]')?.textContent || ''
+    );
 
     const isMac = navigator.platform.includes('Mac');
 
@@ -83,7 +85,7 @@ While on Job, Invoice, or Quote pages:
 
         element.focus?.({ preventScroll: true });
 
-        ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach((eventType) => {
+        ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((eventType) => {
             const EventConstructor = eventType.startsWith('pointer') && window.PointerEvent ? window.PointerEvent : window.MouseEvent;
             const eventOptions = {
                 bubbles: true,
@@ -101,6 +103,29 @@ While on Job, Invoice, or Quote pages:
             } catch (error) {
                 element.dispatchEvent(new MouseEvent(eventType, eventOptions));
             }
+        });
+
+        try {
+            element.click?.();
+        } catch (error) {
+            console.warn('Element click activation failed:', error);
+        }
+    };
+
+    const pressKeyOnElement = (element, key = 'Enter') => {
+        if (!element) {
+            return;
+        }
+
+        element.focus?.({ preventScroll: true });
+        const code = key === ' ' ? 'Space' : key;
+        ['keydown', 'keyup'].forEach((eventType) => {
+            element.dispatchEvent(new KeyboardEvent(eventType, {
+                bubbles: true,
+                cancelable: true,
+                key,
+                code
+            }));
         });
     };
 
@@ -410,6 +435,29 @@ While on Job, Invoice, or Quote pages:
         });
     };
 
+    const openDialogFromHref = (actionHref, actionType) => {
+        jobberFetch(actionHref)
+            .then(response => response.ok ? response.text() : response.text().then(text => {
+                throw new Error(`HTTP ${response.status} ${response.statusText} :: ${text.slice(0, 200)}`);
+            }))
+            .then(js => {
+                try {
+                    const parentWindow = parent.window || window;
+                    if (typeof parentWindow.dialogBox === 'undefined') {
+                        throw new Error('dialogBox constructor not available. Page may not be fully loaded.');
+                    }
+                    new Function(js)();
+                } catch (execError) {
+                    console.warn('Script execution failed, attempting direct navigation:', execError);
+                    window.location.href = actionHref;
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert(`Could not open ${actionType}: ` + error.message);
+            });
+    };
+
     // Check if modifier combo matches (platform-aware)
     const isModifierCombo = (event, combo) => {
         const combos = {
@@ -703,7 +751,8 @@ While on Job, Invoice, or Quote pages:
             let rawActions = button.getAttribute('data-action-button-actions');
 
             if (!rawActions) {
-                // New Jobber UI: press the React Aria trigger, then find and press the menu item
+                // New Jobber UI: activate the React Aria trigger, then find and activate the menu item.
+                const innerButton = button.matches('button') ? null : button.querySelector('button');
                 pressElement(button);
                 const findAndClickItem = (attemptsLeft) => {
                     const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"]')).filter(isElementVisible);
@@ -714,10 +763,24 @@ While on Job, Invoice, or Quote pages:
                         const iconName = item.querySelector('svg[data-testid]')?.getAttribute('data-testid') || '';
                         if (searchCriteria(text, href, id, iconName)) {
                             console.log(`Clicking ${actionType} in dropdown menu...`);
-                            pressElement(item);
+                            if (href && /\.dialog\b/.test(href)) {
+                                openDialogFromHref(href, actionType);
+                            } else {
+                                pressElement(item);
+                                pressKeyOnElement(item, 'Enter');
+                            }
                             return;
                         }
                     }
+
+                    if (attemptsLeft === 9 && innerButton) {
+                        pressElement(innerButton);
+                    } else if (attemptsLeft === 7) {
+                        pressKeyOnElement(button, 'Enter');
+                    } else if (attemptsLeft === 5 && innerButton) {
+                        pressKeyOnElement(innerButton, 'Enter');
+                    }
+
                     if (attemptsLeft > 0) {
                         setTimeout(() => findAndClickItem(attemptsLeft - 1), 100);
                     } else {
@@ -725,7 +788,7 @@ While on Job, Invoice, or Quote pages:
                         alert(`${actionType} action not found in dropdown menu.`);
                     }
                 };
-                setTimeout(() => findAndClickItem(10), 150);
+                setTimeout(() => findAndClickItem(12), 150);
                 return;
             }
 
@@ -760,28 +823,7 @@ While on Job, Invoice, or Quote pages:
                 return;
             }
 
-            jobberFetch(actionHref)
-                .then(response => response.ok ? response.text() : response.text().then(text => {
-                    throw new Error(`HTTP ${response.status} ${response.statusText} :: ${text.slice(0, 200)}`);
-                }))
-                .then(js => {
-                    try {
-                        // Check if dialogBox is available before executing
-                        const parentWindow = parent.window || window;
-                        if (typeof parentWindow.dialogBox === 'undefined') {
-                            throw new Error('dialogBox constructor not available. Page may not be fully loaded.');
-                        }
-                        new Function(js)();
-                    } catch (execError) {
-                        // Fallback: try direct navigation if script execution fails
-                        console.warn('Script execution failed, attempting direct navigation:', execError);
-                        window.location.href = actionHref;
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert(`Could not open ${actionType}: ` + error.message);
-                });
+            openDialogFromHref(actionHref, actionType);
 
         } catch (error) {
             console.error(error);
