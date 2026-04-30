@@ -18,7 +18,7 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 - **`SHIFT + I`** - Switch to **Info** Tab
 
 ### While on Job / Invoice / Quote Pages
-- **`SHIFT + V`** - Scroll to **Visits** section (job page only)
+- **`SHIFT + V`** - Scroll to **Scheduled visits** section (job page only)
 - **`SHIFT + N`** - Scroll to **Internal Notes** section
 
 ## Installation

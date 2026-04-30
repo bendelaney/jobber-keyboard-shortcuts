@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      2.3
+// @version      2.4
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
 // @grant        none
 // ==/UserScript==
 // Jobber Actions Consolidated
-// Version 2.3
+// Version 2.4
 // Author: Ben Delaney
 
 /* ************************
@@ -30,7 +30,7 @@ While in the 'EDIT' mode of a Job Visit Modal:
  - CMD + CTRL + A : Assign Crew
 
 While on a Job page:
- - SHIFT + V : Scroll to Visits section
+ - SHIFT + V : Scroll to Scheduled visits section
 
 While on Job, Invoice, or Quote pages:
  - SHIFT + N : Scroll to Internal Notes section
@@ -217,38 +217,41 @@ While on Job, Invoice, or Quote pages:
         return null;
     };
 
-    // Scroll to a card by its title
-    const scrollToCardByTitle = (cardTitle, pagePathRegex) => {
+    // Scroll to a card/section by its heading text
+    const scrollToCardByTitle = (cardTitle, pagePathRegex, aliases = []) => {
         // Check if we're on a supported page
         if (pagePathRegex && !pagePathRegex.test(window.location.pathname)) {
             console.log(`Not on a supported page for scrolling to ${cardTitle}`);
             return;
         }
 
-        // Search through all card titles
-        const allTitles = document.querySelectorAll('.card-headerTitle');
+        const titleMatches = new Set([cardTitle, ...aliases].map(normalizeText));
+        const allTitles = document.querySelectorAll('.card-headerTitle, h1, h2, h3, h4, [role="heading"]');
         let foundTitle = null;
 
         for (const title of allTitles) {
-            if (normalizeText(title.textContent) === normalizeText(cardTitle)) {
+            if (isElementVisible(title) && titleMatches.has(normalizeText(title.textContent))) {
                 foundTitle = title;
                 break;
             }
         }
 
         if (!foundTitle) {
-            console.log(`${cardTitle} card not found on this page`);
+            console.log(`${cardTitle} section not found on this page`);
             return;
         }
 
-        // Get the parent div.card
-        const card = foundTitle.closest('div.card');
+        const scrollTarget =
+            foundTitle.closest('div.card') ||
+            foundTitle.closest('section, article, [data-testid="ATL-Card"]') ||
+            foundTitle.closest('.flex.flex-col') ||
+            foundTitle.parentElement;
 
-        if (card) {
-            console.log(`Scrolling to ${cardTitle} card`);
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (scrollTarget) {
+            console.log(`Scrolling to ${foundTitle.textContent.trim() || cardTitle} section`);
+            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
-            console.log('Could not find parent card element');
+            console.log('Could not find section element to scroll to');
         }
     };
 
@@ -307,7 +310,7 @@ While on Job, Invoice, or Quote pages:
         {
             title: 'Job / Invoice / Quote Pages',
             shortcuts: [
-                { combo: 'SHIFT + V', description: 'Scroll to <strong>Visits</strong> section (Job pages only)' },
+                { combo: 'SHIFT + V', description: 'Scroll to <strong>Scheduled visits</strong> section (Job pages only)' },
                 { combo: 'SHIFT + N', description: 'Scroll to Internal <strong>Notes</strong> section' }
             ]
         }
@@ -1018,9 +1021,9 @@ While on Job, Invoice, or Quote pages:
         }
     }
 
-    // Function 9: Scroll to Visits Card (SHIFT+V)
+    // Function 9: Scroll to Scheduled Visits section (SHIFT+V)
     function scrollToVisitsCard() {
-        scrollToCardByTitle('Visits', /\/work_orders\/\d+/);
+        scrollToCardByTitle('Visits', /\/work_orders\/\d+/, ['Scheduled visits']);
     }
 
     // Function 10: Scroll to Internal Notes Card (SHIFT+N on Job/Invoice/Quote page)
@@ -1209,7 +1212,7 @@ While on Job, Invoice, or Quote pages:
             }
             // If modal is not open, let the default behavior happen (typing "I")
         }
-        // Check for SHIFT+V (Scroll to Visits Card)
+        // Check for SHIFT+V (Scroll to Scheduled Visits section)
         else if (isModifierCombo(event, 'shift') && event.code === 'KeyV') {
             if (isUserTyping()) {
                 return;
@@ -1305,7 +1308,7 @@ While on Job, Invoice, or Quote pages:
     console.log(`- ${isMac ? 'CMD+\\' : 'CTRL+\\'}: Toggle Activity Feed`);
     console.log('- SHIFT+N: Switch to Notes Tab (in modal) OR Scroll to Internal Notes (on Job, Invoice, Quote pages)');
     console.log('- SHIFT+I: Switch to Info Tab (in Visit/Request modal)');
-    console.log('- SHIFT+V: Scroll to Visits Card (on Job page)');
+    console.log('- SHIFT+V: Scroll to Scheduled visits section (on Job page)');
     console.log(`- ${isMac ? 'CMD+ENTER' : 'CTRL+ENTER'}: Click Save/Send Button`);
     console.log('========================================');
 })();
