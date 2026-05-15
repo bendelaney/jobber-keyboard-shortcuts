@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      3.0
+// @version      3.1
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
 // @grant        none
 // ==/UserScript==
 // Jobber Actions Consolidated
-// Version 3.0
+// Version 3.1
 // Author: Ben Delaney
 
 /* ************************
@@ -915,7 +915,20 @@ While on Job, Invoice, or Quote pages:
             submitSendTextForm(activeSendTextForm);
             return;
         }
-        
+
+        // Visit/Request edit modal (new Jobber UI): find a visible "Save" submit button inside the dialog
+        const { isValid: visitEditValid, dialog: visitEditDialog } = getVisitRequestDialog({ includeEdit: true });
+        if (visitEditValid && visitEditDialog && visitEditDialog !== document) {
+            const submitButtons = Array.from(visitEditDialog.querySelectorAll('button[type="submit"], input[type="submit"]')).filter(isElementVisible);
+            const saveSubmit = submitButtons.find((button) => normalizeText(button.textContent || button.value || '') === 'save')
+                || submitButtons.find((button) => normalizeText(button.textContent || button.value || '').includes('save'));
+            if (saveSubmit) {
+                console.log('Visit/Request edit modal detected, clicking Save submit button');
+                saveSubmit.click();
+                return;
+            }
+        }
+
         // THIRD PRIORITY: Original to_do form save button
         let saveButton = document.querySelector(
             'a.button.button--green.js-spinOnClick.js-formSubmit[data-form="form.to_do"], ' +
