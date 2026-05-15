@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 2.9
+// Version 3.0
 // Author: Ben Delaney
 
 /* ************************
@@ -763,7 +763,9 @@ While on Job, Invoice, or Quote pages:
                         const iconName = item.querySelector('svg[data-testid]')?.getAttribute('data-testid') || '';
                         if (searchCriteria(text, href, id, iconName)) {
                             console.log(`Clicking ${actionType} in dropdown menu...`);
-                            if (href && /\.dialog\b/.test(href)) {
+                            if (item.tagName === 'A' && href) {
+                                pressElement(item);
+                            } else if (href && /\.dialog\b/.test(href)) {
                                 openDialogFromHref(href, actionType);
                             } else {
                                 pressElement(item);
