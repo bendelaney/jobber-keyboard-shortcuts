@@ -23,6 +23,15 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 
 ## Installation
 
+There are two ways to install:
+
+- **🧩 Chrome / Edge / Brave extension** (recommended for Chromium browsers) — a real browser extension, no userscript manager needed. See [`chrome-extension/README.md`](chrome-extension/README.md). The quick version: open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `chrome-extension` folder.
+- **📜 Userscript** (works everywhere, including Safari) — install a userscript manager and the script below.
+
+---
+
+## Userscript Installation
+
 ### 1️⃣ Step 1: Install a Userscript Extension/Add-on
 
 #### For APPLE / MAC USERS:

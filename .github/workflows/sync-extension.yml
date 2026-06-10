@@ -1,0 +1,36 @@
+name: Verify extension is in sync
+
+# The Chrome extension bundles a copy of jobber-keyboard-shortcuts.js as its
+# content script (Manifest V3 forbids loading remote code). This job fails if
+# that copy has drifted from the source — run ./sync-extension.sh to fix it.
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "jobber-keyboard-shortcuts.js"
+      - "chrome-extension/content.js"
+      - "sync-extension.sh"
+  pull_request:
+    paths:
+      - "jobber-keyboard-shortcuts.js"
+      - "chrome-extension/content.js"
+      - "sync-extension.sh"
+
+jobs:
+  verify-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Regenerate extension content script
+        run: ./sync-extension.sh
+
+      - name: Fail if content.js is out of date
+        run: |
+          if ! git diff --exit-code -- chrome-extension/content.js; then
+            echo "::error::chrome-extension/content.js is out of sync with jobber-keyboard-shortcuts.js. Run ./sync-extension.sh and commit the result."
+            exit 1
+          fi
+          echo "Extension content script is in sync."

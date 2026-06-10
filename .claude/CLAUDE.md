@@ -34,12 +34,23 @@ The loader (`jobber-keyboard-shortcuts-userscript.user.js`) fetches the bookmark
 After the header comments, the code is **identical** in both files. Never change one without the other.
 
 ### 2. Version Numbers
-When updating version numbers, update ALL three locations:
+When updating version numbers, update ALL FOUR locations:
 - `@version` in manual-install.js metadata (line 3)
 - `// Version X.X` comment in manual-install.js (line 10)
 - `// Version X.X` comment in bookmarklet.js (line 2)
+- `"version"` in `chrome-extension/manifest.json`
 
 Bump the version for any new shortcut or significant change.
+
+### 2b. Chrome Extension Sync
+The Chrome extension (`chrome-extension/`) bundles the shortcut logic as
+`chrome-extension/content.js`, which is **auto-generated** from the canonical
+`jobber-keyboard-shortcuts.js` (MV3 forbids loading remote code, so it can't use
+the GitHub-fetch loader trick). **After ANY change to the shortcut logic, run
+`./sync-extension.sh`** to regenerate `content.js`, and commit the result. CI
+(`.github/workflows/sync-extension.yml`) fails if it has drifted. Never edit
+`chrome-extension/content.js` by hand. If shortcuts change, also update the
+platform-aware reference in `chrome-extension/popup.js`.
 
 ### 3. Platform-Specific Shortcuts
 Detect OS: `const isMac = navigator.platform.includes('Mac');`

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1a1a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #137e4b;
+      --kbd-bg: #f3f4f6;
+      --kbd-border: #d1d5db;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 340px;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      color: var(--fg);
+      background: var(--bg);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    header img { width: 28px; height: 28px; }
+    header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+    header .ver { color: var(--muted); font-size: 11px; }
+    .content { padding: 8px 16px 14px; max-height: 460px; overflow-y: auto; }
+    .group { margin-top: 12px; }
+    .group h2 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 6px;
+      font-weight: 600;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .row:last-child { border-bottom: none; }
+    .row .label { flex: 1; }
+    .keys { display: flex; gap: 4px; flex-shrink: 0; }
+    kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--kbd-bg);
+      border: 1px solid var(--kbd-border);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="icons/icon48.png" alt="" />
+    <div>
+      <h1>Jobber Keyboard Shortcuts</h1>
+      <span class="ver" id="version"></span>
+    </div>
+  </header>
+  <div class="content" id="shortcuts"></div>
+  <footer>
+    <span id="platform"></span>
+    <a id="repo" href="https://github.com/bendelaney/jobber-keyboard-shortcuts" target="_blank" rel="noopener">View on GitHub</a>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>
