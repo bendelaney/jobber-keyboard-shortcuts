@@ -23,10 +23,35 @@ A userscript that adds powerful keyboard shortcuts to Jobber to speed up your wo
 
 ## Installation
 
-There are two ways to install:
+Pick the option that matches your browser:
 
-- **🧩 Chrome / Edge / Brave extension** (recommended for Chromium browsers) — a real browser extension, no userscript manager needed. See [`chrome-extension/README.md`](chrome-extension/README.md). The quick version: open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `chrome-extension` folder.
-- **📜 Userscript** (works everywhere, including Safari) — install a userscript manager and the script below.
+### 🧩 Chrome / Edge / Brave — Chrome Web Store (recommended, one-click)
+
+**[👉 Install from the Chrome Web Store 👈](https://chrome.google.com/webstore/detail/REPLACE_WITH_EXTENSION_ID)**
+
+> ⚠️ **Maintainer note:** the link above is a placeholder until the extension is
+> published. After it's approved in the
+> [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole),
+> replace `REPLACE_WITH_EXTENSION_ID` with the real listing URL.
+
+That's it — click **Add to Chrome**, then open [Jobber](https://secure.getjobber.com).
+The extension updates itself automatically whenever a new version ships.
+
+### 🧩 Chrome / Edge / Brave — manual (no store, free)
+
+Prefer not to wait for the store, or want the latest dev version? Load it unpacked:
+
+1. Download this repo (green **Code** button → **Download ZIP**, then unzip), or `git clone` it.
+2. Open **`chrome://extensions`** in your browser.
+3. Turn on **Developer mode** (top-right).
+4. Click **Load unpacked** and select the **`chrome-extension`** folder.
+5. Open [Jobber](https://secure.getjobber.com) — the shortcuts are live.
+
+Full details and the Safari conversion notes are in [`chrome-extension/README.md`](chrome-extension/README.md).
+
+### 📜 Userscript (works everywhere, including Safari)
+
+Install a userscript manager and the script — see the steps below.
 
 ---
 

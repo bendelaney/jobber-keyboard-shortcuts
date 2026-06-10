@@ -5,6 +5,11 @@ the [Jobber Keyboard Shortcuts](../README.md) userscript. It adds the same
 keyboard shortcuts to [secure.getjobber.com](https://secure.getjobber.com) — no
 userscript manager required.
 
+**Most people should just [install it from the Chrome Web Store](https://chrome.google.com/webstore/detail/REPLACE_WITH_EXTENSION_ID)**
+(one click, auto-updates). _(That link is a placeholder until the extension is
+published — see "Install it (the polished way)" below.)_ The rest of this file
+covers manual install and how the extension is built.
+
 > The shortcut logic lives in the project's canonical file,
 > [`../jobber-keyboard-shortcuts.js`](../jobber-keyboard-shortcuts.js).
 > `content.js` here is **auto-generated** from it by
