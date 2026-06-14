@@ -54,11 +54,14 @@ automatic updates. It requires:
   collects **no** data and uses no special permissions, which keeps review easy).
 - A review by Google, typically a few days.
 
-To build the upload zip:
+**Everything you need is already prepared** — see
+**[`STORE_LISTING.md`](STORE_LISTING.md)** for copy-paste-ready listing text,
+privacy answers, and a step-by-step submission checklist. The store images live
+in [`store-assets/`](store-assets/), and the upload package is built by
+[`../build-zip.sh`](../build-zip.sh):
 
 ```bash
-cd chrome-extension
-zip -r ../jobber-keyboard-shortcuts-extension.zip . -x '*.DS_Store'
+./build-zip.sh   # from the repo root → jobber-keyboard-shortcuts-extension.zip
 ```
 
 ## Safari?
