@@ -84,6 +84,7 @@ Open source: https://github.com/bendelaney/jobber-keyboard-shortcuts
 | Screenshot 1 (1280×800) | `store-assets/screenshot-1.png` |
 | Screenshot 2 (1280×800) | `store-assets/screenshot-2.png` |
 | Small promo tile (440×280) — optional | `store-assets/promo-tile-440x280.png` |
+| Marquee promo tile (1400×560) — optional | `store-assets/marquee-1400x560.png` |
 
 **Official URL / Homepage** (optional)
 ```
