@@ -27,12 +27,7 @@ Pick the option that matches your browser:
 
 ### 🧩 Chrome / Edge / Brave — Chrome Web Store (recommended, one-click)
 
-**[👉 Install from the Chrome Web Store 👈](https://chrome.google.com/webstore/detail/REPLACE_WITH_EXTENSION_ID)**
-
-> ⚠️ **Maintainer note:** the link above is a placeholder until the extension is
-> published. After it's approved in the
-> [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole),
-> replace `REPLACE_WITH_EXTENSION_ID` with the real listing URL.
+**[👉 Install from the Chrome Web Store 👈](https://chromewebstore.google.com/detail/jobber-keyboard-shortcuts/kapnepnhinjagclnnlgfpmpcnpkidlpo)**
 
 That's it — click **Add to Chrome**, then open [Jobber](https://secure.getjobber.com).
 The extension updates itself automatically whenever a new version ships.
