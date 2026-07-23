@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Jobber Keyboard Shortcuts
-// @version      3.1
+// @version      3.2
 // @description  A collection of super helpful keyboard shortcuts for Jobber.
 // @author       Ben Delaney
 // @match        https://secure.getjobber.com/*
 // @grant        none
 // ==/UserScript==
 // Jobber Actions Consolidated
-// Version 3.1
+// Version 3.2
 // Author: Ben Delaney
 
 /* ************************
@@ -1090,6 +1090,48 @@ While on Job, Invoice, or Quote pages:
         }
     }
 
+    // Helper: focus the note field inside a container (contenteditable Lexical
+    // editor first, legacy textarea as fallback) and place the caret at the end.
+    function focusNoteField(container) {
+        const scope = container || document;
+
+        // Newer Jobber note editor is a contenteditable Lexical field.
+        const noteEditor = Array.from(
+            scope.querySelectorAll('[contenteditable="true"][role="textbox"]')
+        ).find((el) =>
+            isElementVisible(el) &&
+            normalizeText(el.getAttribute('aria-label') || '') === 'leave a note'
+        ) || scope.querySelector('[contenteditable="true"][aria-label="Leave a note"]');
+
+        if (noteEditor) {
+            console.log('Focusing Notes editor');
+            noteEditor.focus();
+            // Place the caret at the end of any existing content.
+            try {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(noteEditor);
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } catch (e) {
+                console.warn('Could not set caret in Notes editor', e);
+            }
+            return true;
+        }
+
+        // Legacy textarea fallback.
+        const notesTextarea = scope.querySelector('textarea[name="message"], textarea[name="note[message]"]');
+        if (notesTextarea) {
+            console.log('Focusing Notes textarea');
+            notesTextarea.focus();
+            return true;
+        }
+
+        console.warn('Notes field not found after tab switch');
+        return false;
+    }
+
     // Function 6: Switch to Notes Tab (SHIFT+N)
     function switchToNotesTab() {
         try {
@@ -1112,15 +1154,9 @@ While on Job, Invoice, or Quote pages:
             console.log('Clicking Notes tab');
             notesTab.click();
 
-            // Wait for the tab to switch, then focus the textarea
+            // Wait for the tab to switch, then focus the note field
             setTimeout(() => {
-                const notesTextarea = dialog.querySelector('textarea[name="message"], textarea[name="note[message]"]');
-                if (notesTextarea) {
-                    console.log('Focusing Notes textarea');
-                    notesTextarea.focus();
-                } else {
-                    console.warn('Notes textarea not found after tab switch');
-                }
+                focusNoteField(dialog);
             }, 100);
 
         } catch (error) {
