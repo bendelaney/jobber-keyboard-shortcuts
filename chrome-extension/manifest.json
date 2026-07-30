@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jobber Keyboard Shortcuts",
-  "version": "3.2",
+  "version": "3.3",
   "description": "A collection of super helpful keyboard shortcuts for Jobber (secure.getjobber.com).",
   "author": "Ben Delaney",
   "icons": {

@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 3.2
+// Version 3.3
 // Author: Ben Delaney
 
 /* ************************
@@ -878,6 +878,55 @@ While on Job, Invoice, or Quote pages:
         });
     }
 
+    // Find a "Save" submit button in a modern (React) Jobber form — e.g. the Task form.
+    // Scoped to the focused form first, then any open dialog, then a single unambiguous
+    // page-level form, so it can't hijack legacy note/to-do saves.
+    const findGenericSaveSubmitButton = () => {
+        const isLegacyNoteScope = (scope) => Boolean(
+            scope.querySelector('.js-noteContainer, button.js-saveNote, textarea[name="note[message]"]')
+        );
+
+        const pickSaveButton = (scope) => {
+            if (!scope || isLegacyNoteScope(scope)) {
+                return null;
+            }
+
+            const submitButtons = Array.from(scope.querySelectorAll('button[type="submit"], input[type="submit"]'))
+                .filter((button) => isElementVisible(button) && !button.disabled && button.getAttribute('aria-busy') !== 'true');
+
+            return submitButtons.find((button) => normalizeText(button.textContent || button.value || '') === 'save')
+                || submitButtons.find((button) => normalizeText(button.textContent || button.value || '').includes('save'))
+                || null;
+        };
+
+        // 1. The form that currently has focus (typing in Title/Instructions/etc.)
+        const focusedForm = document.activeElement && document.activeElement !== document.body
+            ? document.activeElement.closest('form')
+            : null;
+        const focusedFormSave = pickSaveButton(focusedForm);
+        if (focusedFormSave) {
+            return focusedFormSave;
+        }
+
+        // 2. The topmost open dialog/modal
+        const visibleDialogs = Array.from(document.querySelectorAll('[role="dialog"], .dialog-box, .modal'))
+            .reverse()
+            .filter(isElementVisible);
+        for (const dialog of visibleDialogs) {
+            const dialogSave = pickSaveButton(dialog);
+            if (dialogSave) {
+                return dialogSave;
+            }
+        }
+
+        // 3. A single unambiguous form on the page with a visible Save submit button
+        const pageFormSaves = Array.from(document.querySelectorAll('form'))
+            .filter(isElementVisible)
+            .map(pickSaveButton)
+            .filter(Boolean);
+        return pageFormSaves.length === 1 ? pageFormSaves[0] : null;
+    };
+
     // Function 3: Click Save Button (CMD+ENTER)
     function clickSaveButton() {
         // HIGHEST PRIORITY: Check for email dialog send button (Invoice/Quote emails)
@@ -937,7 +986,15 @@ While on Job, Invoice, or Quote pages:
             submitNewNoteForm(activeNewNoteForm);
             return;
         }
-        
+
+        // Modern Jobber forms (Task form, etc.): click the form's own Save submit button
+        const genericSaveButton = findGenericSaveSubmitButton();
+        if (genericSaveButton) {
+            console.log('Modern form detected, clicking Save submit button');
+            genericSaveButton.click();
+            return;
+        }
+
         // FOURTH PRIORITY: Note forms, prioritize modal context over main page
         console.log('Looking for note save functionality...');
         
@@ -1569,13 +1626,19 @@ While on Job, Invoice, or Quote pages:
 
             const activeSendTextForm = getActiveSendTextForm();
 
+            // A modern form with its own Save button (e.g. the Task form) wins over the
+            // loose Messages-interface heuristic, which matches any page with a submit button
+            const targetForm = target && target.closest ? target.closest('form') : null;
+            const targetFormSaveButton = findGenericSaveSubmitButton();
+            const isInSaveableForm = Boolean(targetForm && targetFormSaveButton && targetForm.contains(targetFormSaveButton));
+
             if (target && target.tagName === 'TEXTAREA' && activeSendTextForm && activeSendTextForm.container.contains(target)) {
                 // We're in the modern Send Text form, send the message
                 event.stopPropagation();
                 event.stopImmediatePropagation();
                 console.log('CMD+ENTER in Send Text form: sending message');
                 submitSendTextForm(activeSendTextForm);
-            } else if (target && target.tagName === 'TEXTAREA' && isInMessagesInterface()) {
+            } else if (target && target.tagName === 'TEXTAREA' && !isInSaveableForm && isInMessagesInterface()) {
                 // We're in Messages interface, send the message
                 // Find the send button using multiple strategies
                 const sendButton =
