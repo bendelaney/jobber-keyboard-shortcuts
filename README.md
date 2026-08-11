@@ -44,6 +44,24 @@ Prefer not to wait for the store, or want the latest dev version? Load it unpack
 
 Full details and the Safari conversion notes are in [`chrome-extension/README.md`](chrome-extension/README.md).
 
+### 🦊 Firefox — Firefox Add-ons (recommended, one-click)
+
+**[👉 Install from Firefox Add-ons 👈](https://addons.mozilla.org/addon/jobber-keyboard-shortcuts/)**
+
+That's it — click **Add to Firefox**, then open [Jobber](https://secure.getjobber.com).
+The extension updates itself automatically whenever a new version ships.
+
+### 🦊 Firefox — manual (for testing)
+
+1. Download this repo (green **Code** button → **Download ZIP**, then unzip), or `git clone` it.
+2. Open **`about:debugging#/runtime/this-firefox`** in Firefox.
+3. Click **Load Temporary Add-on…** and select
+   **`firefox-extension/manifest.json`**.
+4. Open [Jobber](https://secure.getjobber.com) — the shortcuts are live.
+
+Firefox removes temporary add-ons when it restarts. For details, see
+[`firefox-extension/README.md`](firefox-extension/README.md).
+
 ### 📜 Userscript (works everywhere, including Safari)
 
 Install a userscript manager and the script — see the steps below.

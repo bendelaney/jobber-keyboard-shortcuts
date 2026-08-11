@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Syncs the canonical userscript into the Chrome extension's content script.
+# Syncs the canonical userscript into each browser extension's content script.
 #
 # The bookmarklet file (jobber-keyboard-shortcuts.js) is the SINGLE SOURCE OF
 # TRUTH for the shortcut logic. Chrome's Manifest V3 forbids fetching/eval'ing
@@ -11,14 +11,19 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 SRC="jobber-keyboard-shortcuts.js"
-DEST="chrome-extension/content.js"
+DESTINATIONS=(
+  "chrome-extension/content.js"
+  "firefox-extension/content.js"
+)
 
-{
-  echo "// ============================================================"
-  echo "// AUTO-GENERATED — DO NOT EDIT BY HAND."
-  echo "// Source of truth: $SRC (run ./sync-extension.sh to regenerate)."
-  echo "// ============================================================"
-  cat "$SRC"
-} > "$DEST"
+for DEST in "${DESTINATIONS[@]}"; do
+  {
+    echo "// ============================================================"
+    echo "// AUTO-GENERATED — DO NOT EDIT BY HAND."
+    echo "// Source of truth: $SRC (run ./sync-extension.sh to regenerate)."
+    echo "// ============================================================"
+    cat "$SRC"
+  } > "$DEST"
 
-echo "Synced $SRC -> $DEST"
+  echo "Synced $SRC -> $DEST"
+done

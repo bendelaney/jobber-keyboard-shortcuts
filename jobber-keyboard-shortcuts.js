@@ -420,44 +420,6 @@ While on Job, Invoice, or Quote pages:
         }
     };
 
-    // Create fetch with Jobber headers
-    const jobberFetch = (url) => {
-        const token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
-
-        return fetch(url, {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Accept': '*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript',
-                'X-Requested-With': 'XMLHttpRequest',
-                ...(token ? {'X-CSRF-Token': token} : {})
-            }
-        });
-    };
-
-    const openDialogFromHref = (actionHref, actionType) => {
-        jobberFetch(actionHref)
-            .then(response => response.ok ? response.text() : response.text().then(text => {
-                throw new Error(`HTTP ${response.status} ${response.statusText} :: ${text.slice(0, 200)}`);
-            }))
-            .then(js => {
-                try {
-                    const parentWindow = parent.window || window;
-                    if (typeof parentWindow.dialogBox === 'undefined') {
-                        throw new Error('dialogBox constructor not available. Page may not be fully loaded.');
-                    }
-                    new Function(js)();
-                } catch (execError) {
-                    console.warn('Script execution failed, attempting direct navigation:', execError);
-                    window.location.href = actionHref;
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                alert(`Could not open ${actionType}: ` + error.message);
-            });
-    };
-
     // Check if modifier combo matches (platform-aware)
     const isModifierCombo = (event, combo) => {
         const combos = {
@@ -479,27 +441,27 @@ While on Job, Invoice, or Quote pages:
         {
             title: 'Global',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + /' : 'CTRL + /', description: 'Show this shortcuts reference' },
-                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: "Toggle '<strong>Activity Feed</strong>' side panel" },
-                { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: "Toggle '<strong>Messages</strong>' side panel" },
-                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: 'Click <strong>Save/Send</strong> button in visit modals, notes, email forms, text message forms, or new note forms' },
+                { combo: isMac ? 'COMMAND + /' : 'CTRL + /', description: ['Show this shortcuts reference'] },
+                { combo: isMac ? 'COMMAND + \\' : 'CTRL + \\', description: ['Toggle ', { strong: 'Activity Feed' }, ' side panel'] },
+                { combo: isMac ? 'COMMAND + OPTION + \\' : 'CTRL + ALT + \\', description: ['Toggle ', { strong: 'Messages' }, ' side panel'] },
+                { combo: isMac ? 'COMMAND + ENTER' : 'CTRL + ENTER', description: ['Click ', { strong: 'Save/Send' }, ' button in visit modals, notes, email forms, text message forms, or new note forms'] },
             ]
         },
         {
             title: 'Visit / Request Modals',
             shortcuts: [
-                { combo: isMac ? 'COMMAND + CTRL + E' : 'CTRL + ALT + E', description: 'Open <strong>Edit</strong> dialog or click Edit in popover' },
-                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: 'Open <strong>Text</strong> Reminder dialog' },
-                { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: '<strong>Assign</strong> crew' },
-                { combo: 'SHIFT + N', description: 'Switch to <strong>Notes</strong> tab' },
-                { combo: 'SHIFT + I', description: 'Switch to <strong>Info</strong> tab' },
+                { combo: isMac ? 'COMMAND + CTRL + E' : 'CTRL + ALT + E', description: ['Open ', { strong: 'Edit' }, ' dialog or click Edit in popover'] },
+                { combo: isMac ? 'COMMAND + CTRL + T' : 'CTRL + ALT + T', description: ['Open ', { strong: 'Text' }, ' Reminder dialog'] },
+                { combo: isMac ? 'COMMAND + CTRL + A' : 'CTRL + ALT + A', description: [{ strong: 'Assign' }, ' crew'] },
+                { combo: 'SHIFT + N', description: ['Switch to ', { strong: 'Notes' }, ' tab'] },
+                { combo: 'SHIFT + I', description: ['Switch to ', { strong: 'Info' }, ' tab'] },
             ]
         },
         {
             title: 'Job / Invoice / Quote Pages',
             shortcuts: [
-                { combo: 'SHIFT + V', description: 'Scroll to <strong>Scheduled visits</strong> section (Job pages only)' },
-                { combo: 'SHIFT + N', description: 'Start a new <strong>Note</strong>' }
+                { combo: 'SHIFT + V', description: ['Scroll to ', { strong: 'Scheduled visits' }, ' section (Job pages only)'] },
+                { combo: 'SHIFT + N', description: ['Start a new ', { strong: 'Note' }] }
             ]
         }
     ];
@@ -588,7 +550,12 @@ While on Job, Invoice, or Quote pages:
         ].join(';');
 
         const subtitle = document.createElement('p');
-        subtitle.innerHTML = '<a href="https://github.com/bendelaney/jobber-keyboard-shortcuts" target="_blank" rel="noopener">more info</a>';
+        const moreInfoLink = document.createElement('a');
+        moreInfoLink.href = 'https://github.com/bendelaney/jobber-keyboard-shortcuts';
+        moreInfoLink.target = '_blank';
+        moreInfoLink.rel = 'noopener';
+        moreInfoLink.textContent = 'more info';
+        subtitle.appendChild(moreInfoLink);
         subtitle.style.cssText = [
             'margin: 0 0 20px',
             'color: #4b5563',
@@ -646,7 +613,7 @@ While on Job, Invoice, or Quote pages:
                 ].join(';');
 
                 const combo = document.createElement('span');
-                combo.innerHTML = shortcut.combo;
+                combo.textContent = shortcut.combo;
                 combo.style.cssText = [
                     'font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                     'font-size: 13px',
@@ -654,7 +621,16 @@ While on Job, Invoice, or Quote pages:
                 ].join(';');
 
                 const description = document.createElement('span');
-                description.innerHTML = shortcut.description;
+                shortcut.description.forEach((part) => {
+                    if (typeof part === 'string') {
+                        description.appendChild(document.createTextNode(part));
+                        return;
+                    }
+
+                    const strong = document.createElement('strong');
+                    strong.textContent = part.strong;
+                    description.appendChild(strong);
+                });
                 description.style.cssText = [
                     'font-size: 14px',
                     'color: #374151',
@@ -748,84 +724,43 @@ While on Job, Invoice, or Quote pages:
                 return;
             }
 
-            let rawActions = button.getAttribute('data-action-button-actions');
-
-            if (!rawActions) {
-                // New Jobber UI: activate the React Aria trigger, then find and activate the menu item.
-                const innerButton = button.matches('button') ? null : button.querySelector('button');
-                pressElement(button);
-                const findAndClickItem = (attemptsLeft) => {
-                    const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"]')).filter(isElementVisible);
-                    for (const item of menuItems) {
-                        const text = normalizeText(item.textContent);
-                        const href = item.getAttribute('href') || '';
-                        const id = item.id || '';
-                        const iconName = item.querySelector('svg[data-testid]')?.getAttribute('data-testid') || '';
-                        if (searchCriteria(text, href, id, iconName)) {
-                            console.log(`Clicking ${actionType} in dropdown menu...`);
-                            if (item.tagName === 'A' && href) {
-                                pressElement(item);
-                            } else if (href && /\.dialog\b/.test(href)) {
-                                openDialogFromHref(href, actionType);
-                            } else {
-                                pressElement(item);
-                                pressKeyOnElement(item, 'Enter');
-                            }
-                            return;
+            // Use Jobber's rendered menu rather than executing response scripts or
+            // parsing action HTML. This works with both the legacy and current UI.
+            const innerButton = button.matches('button') ? null : button.querySelector('button');
+            pressElement(button);
+            const findAndClickItem = (attemptsLeft) => {
+                const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"], a[href]')).filter(isElementVisible);
+                for (const item of menuItems) {
+                    const text = normalizeText(item.textContent);
+                    const href = item.getAttribute('href') || '';
+                    const id = item.id || '';
+                    const iconName = item.querySelector('svg[data-testid]')?.getAttribute('data-testid') || '';
+                    if (searchCriteria(text, href, id, iconName)) {
+                        console.log(`Clicking ${actionType} in dropdown menu...`);
+                        pressElement(item);
+                        if (item.tagName !== 'A') {
+                            pressKeyOnElement(item, 'Enter');
                         }
+                        return;
                     }
-
-                    if (attemptsLeft === 9 && innerButton) {
-                        pressElement(innerButton);
-                    } else if (attemptsLeft === 7) {
-                        pressKeyOnElement(button, 'Enter');
-                    } else if (attemptsLeft === 5 && innerButton) {
-                        pressKeyOnElement(innerButton, 'Enter');
-                    }
-
-                    if (attemptsLeft > 0) {
-                        setTimeout(() => findAndClickItem(attemptsLeft - 1), 100);
-                    } else {
-                        pressElement(button); // close the menu
-                        alert(`${actionType} action not found in dropdown menu.`);
-                    }
-                };
-                setTimeout(() => findAndClickItem(12), 150);
-                return;
-            }
-
-            rawActions = rawActions.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-
-            let actionsArray;
-            try {
-                actionsArray = JSON.parse(rawActions);
-            } catch (e) {
-                alert('Could not parse actions JSON.');
-                return;
-            }
-
-            let actionHref = null;
-            for (const html of actionsArray) {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                const anchor = tempDiv.querySelector('a');
-                const text = normalizeText(tempDiv.textContent);
-                const href = (anchor && anchor.getAttribute('href')) || '';
-                const id = (anchor && anchor.id) || '';
-
-                if (anchor && searchCriteria(text, href, id)) {
-                    actionHref = href;
-                    break;
                 }
-            }
 
-            if (!actionHref) {
-                console.log('Available actions:', actionsArray);
-                alert(`${actionType} action not found.`);
-                return;
-            }
+                if (attemptsLeft === 9 && innerButton) {
+                    pressElement(innerButton);
+                } else if (attemptsLeft === 7) {
+                    pressKeyOnElement(button, 'Enter');
+                } else if (attemptsLeft === 5 && innerButton) {
+                    pressElement(innerButton);
+                }
 
-            openDialogFromHref(actionHref, actionType);
+                if (attemptsLeft > 0) {
+                    setTimeout(() => findAndClickItem(attemptsLeft - 1), 100);
+                } else {
+                    pressElement(button); // close the menu
+                    alert(`${actionType} action not found in dropdown menu.`);
+                }
+            };
+            setTimeout(() => findAndClickItem(12), 150);
 
         } catch (error) {
             console.error(error);
@@ -939,7 +874,7 @@ While on Job, Invoice, or Quote pages:
                 return;
             }
         }
-        
+
         // SECOND PRIORITY: Check for SMS/send text dialog send button
         const smsDialog = document.querySelector('.js-sendToClientDialogSms');
         if (smsDialog) {
@@ -975,7 +910,7 @@ While on Job, Invoice, or Quote pages:
             'a.button.button--green.js-spinOnClick.js-formSubmit[data-form="form.to_do"], ' +
             'button.button.button--green.js-spinOnClick.js-formSubmit[data-form="form.to_do"]'
         );
-        
+
         if (saveButton) {
             saveButton.click();
             return;
@@ -997,7 +932,7 @@ While on Job, Invoice, or Quote pages:
 
         // FOURTH PRIORITY: Note forms, prioritize modal context over main page
         console.log('Looking for note save functionality...');
-        
+
         let activeContainer = null;
         let activeTextarea = null;
         let activeSaveButton = null;
@@ -1009,7 +944,7 @@ While on Job, Invoice, or Quote pages:
             activeSaveButton = activeVisitRequestNoteForm.saveButton;
             console.log('Found active note form in visit/request modal');
         }
-        
+
         // Strategy 1: Check if there's a dialog/modal open first
         const modal = document.querySelector('.dialog-box, [role="dialog"], .modal');
         if (!activeContainer && modal) {
@@ -1018,7 +953,7 @@ While on Job, Invoice, or Quote pages:
             if (modalNoteContainer) {
                 const modalTextarea = modalNoteContainer.querySelector('textarea[name="note[message]"]');
                 const modalSaveButton = modalNoteContainer.querySelector('button.js-saveNote');
-                
+
                 // Check if this modal note form is visible (not display:none)
                 const containerStyle = window.getComputedStyle(modalNoteContainer);
                 if (modalTextarea && modalSaveButton && containerStyle.display !== 'none') {
@@ -1029,12 +964,12 @@ While on Job, Invoice, or Quote pages:
                 }
             }
         }
-        
+
         // Strategy 2: If no modal note found, look for focused textarea or one with content
         if (!activeContainer) {
             console.log('No modal note found, checking for focused/active textarea...');
             const allTextareas = document.querySelectorAll('textarea[name="note[message]"]');
-            
+
             // Check for focused textarea first
             for (const textarea of allTextareas) {
                 if (document.activeElement === textarea) {
@@ -1049,7 +984,7 @@ While on Job, Invoice, or Quote pages:
                     }
                 }
             }
-            
+
             // If still no active found, look for one with content
             if (!activeContainer) {
                 for (const textarea of allTextareas) {
@@ -1066,7 +1001,7 @@ While on Job, Invoice, or Quote pages:
                     }
                 }
             }
-            
+
             // Last resort - first visible textarea
             if (!activeContainer) {
                 for (const textarea of allTextareas) {
@@ -1082,26 +1017,26 @@ While on Job, Invoice, or Quote pages:
                 }
             }
         }
-        
+
         if (activeContainer && activeTextarea && activeSaveButton) {
             console.log('Processing active note textarea with content:', activeTextarea.value);
-            
+
             // Focus the textarea to ensure it's active
             activeTextarea.focus();
-            
+
             // Trigger all the events that might be needed
             const events = ['input', 'change', 'keyup', 'blur'];
             events.forEach(eventType => {
                 const event = new Event(eventType, { bubbles: true });
                 activeTextarea.dispatchEvent(event);
             });
-            
+
             // Wait for events to process, then click save
             setTimeout(() => {
                 console.log('Clicking save button after processing note events');
                 activeSaveButton.click();
             }, 150);
-            
+
         } else {
             alert('Save button not found on this page');
         }
@@ -1109,9 +1044,9 @@ While on Job, Invoice, or Quote pages:
 
     // Function 4: Toggle Text Message Inbox (CMD+OPTION+\)
     function toggleMessageInbox() {
-        const messageButton = document.querySelector('button[aria-label="Open Text Message Inbox"]') || 
+        const messageButton = document.querySelector('button[aria-label="Open Text Message Inbox"]') ||
                               document.querySelector('button[aria-label="Open Message Center"]');
-        
+
         if (messageButton) {
             console.log('Text message inbox button found, clicking...');
             messageButton.click();
@@ -1265,22 +1200,22 @@ While on Job, Invoice, or Quote pages:
 
         // Find the Assign Crew button - it's a div element
         const dialog = title?.closest('[role="dialog"],.dialog-box,.modal') || document;
-        
+
         // Try multiple selector strategies
         let assignButton = dialog.querySelector('div.js-crewButton.js-spotlightCrew[aria-label="Assign Crew Button"]');
-        
+
         if (!assignButton) {
             assignButton = dialog.querySelector('div.js-crewButton.js-spotlightCrew');
         }
-        
+
         if (!assignButton) {
             assignButton = dialog.querySelector('.js-crewButton');
         }
-        
+
         if (!assignButton) {
             assignButton = dialog.querySelector('[class*="js-crewButton"]');
         }
-        
+
         if (assignButton) {
             console.log('Assign Crew button found, clicking...');
             assignButton.click();
@@ -1428,7 +1363,7 @@ While on Job, Invoice, or Quote pages:
             }
         }
     };
-    
+
     // Add multiple listeners to catch Escape at different phases
     document.addEventListener('keydown', blockEscapeInEditDialog, true);
     document.addEventListener('keyup', blockEscapeInEditDialog, true);
@@ -1502,7 +1437,7 @@ While on Job, Invoice, or Quote pages:
             //     shiftKey: event.shiftKey
             // });
         }
-        
+
         // Prevent ENTER-only AND Option+Enter from sending messages in chat
         if (event.code === 'Enter' &&
             ((!event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) || // Plain Enter
@@ -1519,7 +1454,7 @@ While on Job, Invoice, or Quote pages:
                 return false;
             }
         }
-        
+
         // Check for CMD+CTRL+E (Mac) or CTRL+ALT+E (Windows) - Edit
         if (isModifierCombo(event, 'cmd+ctrl') && event.code === 'KeyE') {
             event.preventDefault();
@@ -1609,7 +1544,7 @@ While on Job, Invoice, or Quote pages:
         // Check for CMD+ENTER (Save/Send) - Mac: CMD+Enter, Windows: CTRL+Enter
         else if (event.code === 'Enter' && isModifierCombo(event, 'cmd')) {
             event.preventDefault();
-            
+
             // HIGHEST PRIORITY: Check for delete note confirmation dialog
             const deleteNoteDialog = document.querySelector('.dialog-title.js-dialogTitle');
             if (deleteNoteDialog && deleteNoteDialog.textContent.trim().toLowerCase() === 'delete note?') {
@@ -1620,7 +1555,7 @@ While on Job, Invoice, or Quote pages:
                     return;
                 }
             }
-            
+
             // Check if we're in the Messages interface
             const target = event.target;
 
@@ -1665,7 +1600,7 @@ While on Job, Invoice, or Quote pages:
             }
         }
     }, { capture: true }); // Use capture phase to intercept earlier
-    
+
     // Additional event listener for keypress as backup
     document.addEventListener('keypress', function(event) {
         if ((event.code === 'Enter' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) ||
