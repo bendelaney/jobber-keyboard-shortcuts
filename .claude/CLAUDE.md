@@ -39,18 +39,36 @@ When updating version numbers, update ALL FOUR locations:
 - `// Version X.X` comment in manual-install.js (line 10)
 - `// Version X.X` comment in bookmarklet.js (line 2)
 - `"version"` in `chrome-extension/manifest.json`
+- `"version"` in `firefox-extension/manifest.json`
 
-Bump the version for any new shortcut or significant change.
+Bump the version for any new shortcut or significant change. The two manifests
+must always match each other and the scripts.
 
-### 2b. Chrome Extension Sync
-The Chrome extension (`chrome-extension/`) bundles the shortcut logic as
-`chrome-extension/content.js`, which is **auto-generated** from the canonical
-`jobber-keyboard-shortcuts.js` (MV3 forbids loading remote code, so it can't use
-the GitHub-fetch loader trick). **After ANY change to the shortcut logic, run
-`./sync-extension.sh`** to regenerate `content.js`, and commit the result. CI
-(`.github/workflows/sync-extension.yml`) fails if it has drifted. Never edit
-`chrome-extension/content.js` by hand. If shortcuts change, also update the
-platform-aware reference in `chrome-extension/popup.js`.
+### 2b. Extension Sync and Packaging
+Both extensions (`chrome-extension/`, `firefox-extension/`) bundle the shortcut
+logic as `content.js`, which is **auto-generated** from the canonical
+`jobber-keyboard-shortcuts.js` (MV3 forbids loading remote code, so they can't
+use the GitHub-fetch loader trick).
+
+**After ANY change to the shortcut logic, run `./build-all.sh`** and commit
+everything it touches. That one script does the whole chain:
+
+| Step | Output |
+|------|--------|
+| `sync-extension.sh` | `chrome-extension/content.js`, `firefox-extension/content.js` |
+| `build-zip.sh` | `jobber-keyboard-shortcuts-extension.zip` (Chrome Web Store) |
+| `build-firefox-xpi.sh` | `jobber-keyboard-shortcuts-firefox.xpi` (AMO package) |
+| `build-firefox-source.sh` | `jobber-keyboard-shortcuts-firefox-source.zip` (AMO source review) |
+
+Never edit either `content.js` by hand — CI
+(`.github/workflows/sync-extension.yml`) fails if they have drifted. If
+shortcuts change, also update the platform-aware reference in
+`chrome-extension/popup.js` and `firefox-extension/popup.js`.
+
+The built packages are committed so the repo always ships current artifacts, but
+publishing is manual — after pushing, tell Ben to upload:
+- Chrome Web Store: https://chrome.google.com/webstore/devconsole (item `kapnepnhinjagclnnlgfpmpcnpkidlpo`) — upload the `.zip`
+- Firefox Add-ons: https://addons.mozilla.org/developers/addon/jobber-keyboard-shortcuts/versions/submit/ — upload the `.xpi`, then the source `.zip` when prompted
 
 ### 3. Platform-Specific Shortcuts
 Detect OS: `const isMac = navigator.platform.includes('Mac');`
@@ -131,7 +149,14 @@ Single IIFE wrapping all code. Structure:
 - [ ] README.md shows both Mac AND Windows shortcuts
 - [ ] Header comments show Mac shortcuts
 - [ ] Console.log entries use platform-aware template literals with `isMac`
-- [ ] Version bumped in all three locations if new shortcut or significant change
+- [ ] Version bumped in all five locations if new shortcut or significant change
+- [ ] `./build-all.sh` run, and both `content.js` files + all three packages committed
 
 ## Deployment
-Changes to `jobber-keyboard-shortcuts.js` are automatically picked up by the loader userscript. No build step required — just push to `main`.
+Changes to `jobber-keyboard-shortcuts.js` are picked up automatically by the
+loader userscript — just push to `main`.
+
+The extensions are **not** automatic. Every change needs `./build-all.sh` (see
+2b) and a manual upload of the rebuilt packages to the Chrome Web Store and AMO,
+or store users stay on the old version. Always remind Ben to upload after a push
+that changes shortcut logic.
