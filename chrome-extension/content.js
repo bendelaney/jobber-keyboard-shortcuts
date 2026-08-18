@@ -3,7 +3,7 @@
 // Source of truth: jobber-keyboard-shortcuts.js (run ./sync-extension.sh to regenerate).
 // ============================================================
 // Jobber Actions Consolidated
-// Version 3.3
+// Version 3.4
 // Author: Ben Delaney
 
 /* ************************
@@ -1297,19 +1297,64 @@ While on Job, Invoice, or Quote pages:
         }) || null;
     };
 
-    const focusNewNoteTextarea = (attemptsLeft = 20) => {
-        const textarea = getNewNoteTextarea();
-        if (textarea) {
-            console.log('Focusing new note textarea');
-            textarea.focus();
+    // The note field is either the newer contenteditable Lexical editor or the
+    // legacy textarea, depending on the page.
+    const getNewNoteField = () => {
+        const noteEditor = Array.from(document.querySelectorAll('[contenteditable="true"]')).find((element) =>
+            isElementVisible(element) && normalizeText(element.getAttribute('aria-label') || '') === 'leave a note'
+        );
+
+        return noteEditor || getNewNoteTextarea();
+    };
+
+    const focusNewNoteField = (attemptsLeft = 20) => {
+        const field = getNewNoteField();
+        if (field) {
+            if (field.isContentEditable) {
+                focusNoteField(document);
+            } else {
+                console.log('Focusing new note textarea');
+                field.focus();
+            }
             return;
         }
 
         if (attemptsLeft > 0) {
-            setTimeout(() => focusNewNoteTextarea(attemptsLeft - 1), 100);
+            setTimeout(() => focusNewNoteField(attemptsLeft - 1), 100);
         } else {
-            console.warn('New note textarea not found after clicking Add note');
+            console.warn('New note field not found after clicking Add note');
         }
+    };
+
+    // Matchers ordered strongest-signal first, so a specific "Add note" control
+    // wins over a generic button that merely contains the word "add".
+    const addNoteButtonMatchers = [
+        (button) => ['add', 'add note'].includes(normalizeText(button.getAttribute('aria-label'))),
+        (button) => {
+            const text = normalizeText(button.textContent);
+            return text.includes('leave an internal note') || text.includes('leave a note') || text.includes('add note');
+        },
+        (button) => !!button.querySelector('svg[data-testid="add"]'),
+        // Empty-state well: the add/addNote icons live in a sibling of the button,
+        // so the button itself carries no "add" text or icon.
+        (button) => {
+            const well = button.closest('[data-slot="well"]');
+            return !!well && !!well.querySelector('svg[data-testid="addNote"], svg[data-testid="add"]');
+        },
+        (button) => normalizeText(button.textContent).includes('add')
+    ];
+
+    const findAddNoteButtonIn = (container) => {
+        const buttons = Array.from(container.querySelectorAll('button')).filter(isElementVisible);
+
+        for (const matches of addNoteButtonMatchers) {
+            const button = buttons.find(matches);
+            if (button) {
+                return button;
+            }
+        }
+
+        return null;
     };
 
     // Function 10: Start a new note (SHIFT+N on Job/Invoice/Quote page)
@@ -1320,23 +1365,32 @@ While on Job, Invoice, or Quote pages:
 
         let addNoteButton = null;
 
+        // Widen the search from each Notes heading outward: the empty-state well
+        // is not always a sibling of the heading.
         for (const heading of notesHeadings) {
-            const siblings = Array.from(heading.parentElement?.children || []);
-            const headingIndex = siblings.indexOf(heading);
-            const buttonAfterHeading = headingIndex >= 0 ? siblings.slice(headingIndex + 1).find((element) =>
-                element.tagName === 'BUTTON' &&
-                isElementVisible(element) &&
-                (normalizeText(element.getAttribute('aria-label')) === 'add' || normalizeText(element.textContent).includes('add') || element.querySelector('svg[data-testid="add"]'))
-            ) : null;
+            let container = heading.parentElement;
 
-            addNoteButton = buttonAfterHeading || Array.from(heading.parentElement?.querySelectorAll('button') || []).find((button) =>
-                isElementVisible(button) &&
-                (normalizeText(button.getAttribute('aria-label')) === 'add' || normalizeText(button.textContent).includes('add') || button.querySelector('svg[data-testid="add"]'))
-            );
+            for (let depth = 0; container && container !== document.body && depth < 6; depth += 1) {
+                addNoteButton = findAddNoteButtonIn(container);
+                if (addNoteButton) {
+                    break;
+                }
+                container = container.parentElement;
+            }
 
             if (addNoteButton) {
                 break;
             }
+        }
+
+        // Fallback: an empty-state note well anywhere on the page.
+        if (!addNoteButton) {
+            addNoteButton = Array.from(document.querySelectorAll('[data-slot="well"]')).reduce((found, well) => {
+                if (found || !well.querySelector('svg[data-testid="addNote"]')) {
+                    return found;
+                }
+                return Array.from(well.querySelectorAll('button')).find(isElementVisible) || found;
+            }, null);
         }
 
         if (!addNoteButton) {
@@ -1346,7 +1400,7 @@ While on Job, Invoice, or Quote pages:
 
         console.log('Notes Add button found, clicking...');
         addNoteButton.click();
-        focusNewNoteTextarea();
+        focusNewNoteField();
     }
 
     // Block Escape key in Edit dialogs - using multiple event listeners for maximum coverage
