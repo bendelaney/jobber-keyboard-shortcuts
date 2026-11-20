@@ -1,5 +1,5 @@
 // Jobber Actions Consolidated
-// Version 3.4
+// Version 3.5
 // Author: Ben Delaney
 
 /* ************************
@@ -1355,6 +1355,14 @@ While on Job, Invoice, or Quote pages:
 
     // Function 10: Start a new note (SHIFT+N on Job/Invoice/Quote page)
     function startNewNote() {
+        // The note form may already be open, in which case Jobber hides the
+        // Add note button. Just jump to the open field instead.
+        if (getNewNoteField()) {
+            console.log('Note field already open, focusing it');
+            focusNewNoteField();
+            return;
+        }
+
         const notesHeadings = Array.from(document.querySelectorAll('h1, h2, h3, h4, [role="heading"]')).filter((heading) =>
             isElementVisible(heading) && normalizeText(heading.textContent) === 'notes'
         );
