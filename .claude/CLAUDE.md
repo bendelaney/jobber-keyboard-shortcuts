@@ -65,10 +65,13 @@ Never edit either `content.js` by hand — CI
 shortcuts change, also update the platform-aware reference in
 `chrome-extension/popup.js` and `firefox-extension/popup.js`.
 
-The built packages are committed so the repo always ships current artifacts, but
-publishing is manual — after pushing, tell Ben to upload:
-- Chrome Web Store: https://chrome.google.com/webstore/devconsole (item `kapnepnhinjagclnnlgfpmpcnpkidlpo`) — upload the `.zip`
-- Firefox Add-ons: https://addons.mozilla.org/developers/addon/jobber-keyboard-shortcuts/versions/submit/ — upload the `.xpi`, then the source `.zip` when prompted
+The built packages are committed so the repo always ships current artifacts.
+Publishing is automated by `.github/workflows/publish-extensions.yml`: when a
+push to `main` changes the manifest version, it uploads both packages and
+submits them for store review. A push without a version bump publishes nothing.
+Credential setup, manual runs, and the manual-upload fallback are in
+`PUBLISHING.md`. After pushing a version bump to `main`, tell Ben to check the
+**Publish extensions** run in the Actions tab.
 
 ### 3. Platform-Specific Shortcuts
 Detect OS: `const isMac = navigator.platform.includes('Mac');`
@@ -156,7 +159,8 @@ Single IIFE wrapping all code. Structure:
 Changes to `jobber-keyboard-shortcuts.js` are picked up automatically by the
 loader userscript — just push to `main`.
 
-The extensions are **not** automatic. Every change needs `./build-all.sh` (see
-2b) and a manual upload of the rebuilt packages to the Chrome Web Store and AMO,
-or store users stay on the old version. Always remind Ben to upload after a push
-that changes shortcut logic.
+The extensions ship only when the version is bumped. Every change needs
+`./build-all.sh` (see 2b). Pushing a version bump to `main` triggers the
+**Publish extensions** action, which uploads to the Chrome Web Store and AMO and
+submits both for review (see `PUBLISHING.md`). Shortcut-logic changes pushed
+without a version bump reach loader users only, not store users.

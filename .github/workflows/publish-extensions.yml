@@ -1,0 +1,173 @@
+name: Publish extensions
+
+# Uploads and submits a new version to the Chrome Web Store and Firefox
+# Add-ons (AMO) whenever the extension version changes on main.
+#
+# - Automatic: a push to main that changes "version" in the extension manifests.
+#   Pushes that don't bump the version (docs, fixes you want to batch) publish
+#   nothing.
+# - Manual: Actions tab > Publish extensions > Run workflow. Publishes the
+#   current version, e.g. to retry a failed upload.
+#
+# Each store still reviews the submission before users get it.
+# One-time credential setup: see PUBLISHING.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "chrome-extension/manifest.json"
+      - "firefox-extension/manifest.json"
+  workflow_dispatch:
+    inputs:
+      stores:
+        description: "Which stores to publish to"
+        type: choice
+        options: [both, chrome, firefox]
+        default: both
+
+permissions:
+  contents: read
+
+# Never run two publishes at once; a second one waits for the first.
+concurrency:
+  group: publish-extensions
+  cancel-in-progress: false
+
+env:
+  CHROME_EXTENSION_ID: kapnepnhinjagclnnlgfpmpcnpkidlpo
+
+jobs:
+  check:
+    name: Check version and sync
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.changed.outputs.publish }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read and cross-check versions
+        id: version
+        run: |
+          v() { sed -n 's/.*"version": "\(.*\)",/\1/p' "$1" | head -1; }
+          CHROME=$(v chrome-extension/manifest.json)
+          FIREFOX=$(v firefox-extension/manifest.json)
+          SCRIPT=$(sed -n 's|^// Version \(.*\)$|\1|p' jobber-keyboard-shortcuts.js | head -1)
+          echo "chrome=$CHROME firefox=$FIREFOX script=$SCRIPT"
+          if [[ "$CHROME" != "$FIREFOX" || "$CHROME" != "$SCRIPT" ]]; then
+            echo "::error::Versions disagree (chrome $CHROME, firefox $FIREFOX, script $SCRIPT). Update all of them before publishing."
+            exit 1
+          fi
+          echo "version=$CHROME" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if extension content scripts are out of date
+        run: |
+          ./sync-extension.sh > /dev/null
+          if ! git diff --exit-code -- chrome-extension/content.js firefox-extension/content.js; then
+            echo "::error::content.js is out of sync with jobber-keyboard-shortcuts.js. Run ./build-all.sh and commit the result."
+            exit 1
+          fi
+
+      - name: Decide whether to publish
+        id: changed
+        env:
+          BEFORE: ${{ github.event.before }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "Manual run: publishing v$VERSION."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          PREVIOUS=""
+          if [[ -n "$BEFORE" && ! "$BEFORE" =~ ^0+$ ]] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            PREVIOUS=$(git show "$BEFORE:chrome-extension/manifest.json" | sed -n 's/.*"version": "\(.*\)",/\1/p' | head -1)
+          fi
+          if [[ "$PREVIOUS" == "$VERSION" ]]; then
+            echo "Version unchanged at v$VERSION: nothing to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version changed from v${PREVIOUS:-unknown} to v$VERSION: publishing."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  chrome:
+    name: Chrome Web Store
+    needs: check
+    if: needs.check.outputs.publish == 'true' && (github.event_name == 'push' || inputs.stores != 'firefox')
+    runs-on: ubuntu-latest
+    env:
+      CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+      PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+    steps:
+      - name: Check credentials
+        run: |
+          for name in CLIENT_ID CLIENT_SECRET REFRESH_TOKEN PUBLISHER_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing secret CWS_$name. See PUBLISHING.md for setup."
+              exit 1
+            fi
+          done
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build package
+        run: ./build-zip.sh > /dev/null
+
+      - name: Upload and submit for review
+        run: |
+          npx --yes chrome-webstore-upload-cli@4.0.2 \
+            --source jobber-keyboard-shortcuts-extension.zip \
+            --extension-id "$CHROME_EXTENSION_ID"
+          echo "::notice::Chrome Web Store: v${{ needs.check.outputs.version }} uploaded and submitted for review."
+
+  firefox:
+    name: Firefox Add-ons
+    needs: check
+    if: needs.check.outputs.publish == 'true' && (github.event_name == 'push' || inputs.stores != 'chrome')
+    runs-on: ubuntu-latest
+    env:
+      WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+      WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+    steps:
+      - name: Check credentials
+        run: |
+          if [[ -z "$WEB_EXT_API_KEY" || -z "$WEB_EXT_API_SECRET" ]]; then
+            echo "::error::Missing secret AMO_JWT_ISSUER or AMO_JWT_SECRET. See PUBLISHING.md for setup."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build source archive for AMO review
+        run: ./build-firefox-source.sh > /dev/null
+
+      - name: Upload and submit for review
+        # --approval-timeout 0: submit and exit instead of waiting for review.
+        run: |
+          npx --yes web-ext@10.8.0 sign \
+            --source-dir firefox-extension \
+            --ignore-files README.md \
+            --artifacts-dir "$RUNNER_TEMP/web-ext-artifacts" \
+            --channel listed \
+            --upload-source-code jobber-keyboard-shortcuts-firefox-source.zip \
+            --approval-timeout 0
+          echo "::notice::Firefox Add-ons: v${{ needs.check.outputs.version }} uploaded and submitted for review."
